@@ -107,6 +107,7 @@ PipelineConfigInfo VePipeline::defaultPipelineConfigInfo(uint32_t width, uint32_
     configInfo.multisampleInfo.alphaToCoverageEnable = VK_FALSE;  // Optional
     configInfo.multisampleInfo.alphaToOneEnable = VK_FALSE;       // Optional
 
+    // Initialize colorBlendAttachment and info.
     configInfo.colorBlendAttachment.colorWriteMask =
         VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT |
         VK_COLOR_COMPONENT_A_BIT;
@@ -117,6 +118,28 @@ PipelineConfigInfo VePipeline::defaultPipelineConfigInfo(uint32_t width, uint32_
     configInfo.colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;   // Optional
     configInfo.colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;  // Optional
     configInfo.colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;              // Optional
+
+    configInfo.colorBlendInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
+    configInfo.colorBlendInfo.logicOpEnable = VK_FALSE;
+    configInfo.colorBlendInfo.logicOp = VK_LOGIC_OP_COPY;  // Optional
+    configInfo.colorBlendInfo.attachmentCount = 1;
+    configInfo.colorBlendInfo.pAttachments = &configInfo.colorBlendAttachment;
+    configInfo.colorBlendInfo.blendConstants[0] = 0.0f;  // Optional
+    configInfo.colorBlendInfo.blendConstants[1] = 0.0f;  // Optional
+    configInfo.colorBlendInfo.blendConstants[2] = 0.0f;  // Optional
+    configInfo.colorBlendInfo.blendConstants[3] = 0.0f;  // Optional
+
+    // Initialize depthStencilInfo
+    configInfo.depthStencilInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+    configInfo.depthStencilInfo.depthTestEnable = VK_TRUE;
+    configInfo.depthStencilInfo.depthWriteEnable = VK_TRUE;
+    configInfo.depthStencilInfo.depthCompareOp = VK_COMPARE_OP_LESS;
+    configInfo.depthStencilInfo.depthBoundsTestEnable = VK_FALSE;
+    configInfo.depthStencilInfo.minDepthBounds = 0.0f;  // Optional
+    configInfo.depthStencilInfo.maxDepthBounds = 1.0f;  // Optional
+    configInfo.depthStencilInfo.stencilTestEnable = VK_FALSE;
+    configInfo.depthStencilInfo.front = {};  // Optional
+    configInfo.depthStencilInfo.back = {};   // Optional
 
     return configInfo;
 }
