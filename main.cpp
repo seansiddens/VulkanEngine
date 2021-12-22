@@ -1,8 +1,8 @@
-#include "first_app.hpp"
-
 #include <cstdlib>
 #include <iostream>
 #include <stdexcept>
+
+#include "first_app.hpp"
 
 int main() {
     ve::FirstApp app{};

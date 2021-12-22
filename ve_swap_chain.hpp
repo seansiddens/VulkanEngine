@@ -7,7 +7,7 @@
 namespace ve {
 
 class VeSwapChain {
-public:
+   public:
     static constexpr int MAX_FRAMES_IN_FLIGHT = 2;
 
     VeSwapChain(VeDevice &deviceRef, VkExtent2D windowExtent);
@@ -26,14 +26,15 @@ public:
     uint32_t height() { return swapChainExtent.height; }
 
     float extentAspectRatio() {
-        return static_cast<float>(swapChainExtent.width) / static_cast<float>(swapChainExtent.height);
+        return static_cast<float>(swapChainExtent.width) /
+               static_cast<float>(swapChainExtent.height);
     }
     VkFormat findDepthFormat();
 
     VkResult acquireNextImage(uint32_t *imageIndex);
     VkResult submitCommandBuffers(const VkCommandBuffer *buffers, uint32_t *imageIndex);
 
- private:
+   private:
     void createSwapChain();
     void createImageViews();
     void createDepthResources();
@@ -72,4 +73,4 @@ public:
     size_t currentFrame = 0;
 };
 
-} // namespace ve
+}  // namespace ve

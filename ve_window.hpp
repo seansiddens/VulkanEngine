@@ -8,19 +8,19 @@
 namespace ve {
 
 class VeWindow {
-public:
+   public:
     VeWindow(int w, int h, std::string name);
     ~VeWindow();
 
     // Remove copy constructors.
-    VeWindow(const VeWindow &) = delete; 
+    VeWindow(const VeWindow &) = delete;
     VeWindow &operator=(const VeWindow &) = delete;
 
     bool shouldClose() { return glfwWindowShouldClose(window); }
 
     void createWindowSurface(VkInstance instance, VkSurfaceKHR *surface);
 
-private: 
+   private:
     void initWindow();
 
     const int width;
@@ -30,4 +30,4 @@ private:
     GLFWwindow *window;
 };
 
-} // namespace ve (vulkan_engine)
+}  // namespace ve

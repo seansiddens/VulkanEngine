@@ -1,9 +1,9 @@
 #pragma once
 
-#include "ve_window.hpp"
-
 #include <string>
 #include <vector>
+
+#include "ve_window.hpp"
 
 namespace ve {
 
@@ -22,7 +22,7 @@ struct QueueFamilyIndices {
 };
 
 class VeDevice {
-public:
+   public:
 #ifdef NDEBUG
     const bool enableValidationLayers = false;
 #else
@@ -47,31 +47,24 @@ public:
     SwapChainSupportDetails getSwapChainSupport() { return querySwapChainSupport(physicalDevice); }
     uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
     QueueFamilyIndices findPhysicalQueueFamilies() { return findQueueFamilies(physicalDevice); }
-    VkFormat findSupportedFormat(const std::vector<VkFormat> &candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
+    VkFormat findSupportedFormat(const std::vector<VkFormat> &candidates, VkImageTiling tiling,
+                                 VkFormatFeatureFlags features);
 
     // Buffer helper functions
-    void createBuffer(
-        VkDeviceSize size,
-        VkBufferUsageFlags usage,
-        VkMemoryPropertyFlags properties,
-        VkBuffer &buffer,
-        VkDeviceMemory &bufferMemory
-    );
+    void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties,
+                      VkBuffer &buffer, VkDeviceMemory &bufferMemory);
     VkCommandBuffer beginSingleTimeCommands();
     void endSingleTimeCommands(VkCommandBuffer commandBuffer);
     void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
-    void copyBufferToImage(
-        VkBuffer buffer, VkImage image, uint32_t width, uint32_t height, uint32_t layerCount);
-    
-    void createImageWithInfo(
-        const VkImageCreateInfo &imageInfo,
-        VkMemoryPropertyFlags properties,
-        VkImage &image,
-        VkDeviceMemory &imageMemory);
+    void copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height,
+                           uint32_t layerCount);
+
+    void createImageWithInfo(const VkImageCreateInfo &imageInfo, VkMemoryPropertyFlags properties,
+                             VkImage &image, VkDeviceMemory &imageMemory);
 
     VkPhysicalDeviceProperties properties;
 
-private:
+   private:
     void createInstance();
     void setupDebugMessenger();
     void createSurface();
@@ -100,9 +93,8 @@ private:
     VkQueue graphicsQueue_;
     VkQueue presentQueue_;
 
-
     const std::vector<const char *> validationLayers = {"VK_LAYER_KHRONOS_validation"};
     const std::vector<const char *> deviceExtensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
 };
 
-} // namespace ve
+}  // namespace ve

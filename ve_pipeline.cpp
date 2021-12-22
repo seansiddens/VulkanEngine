@@ -1,16 +1,15 @@
 #include "ve_pipeline.hpp"
 
+#include <cassert>
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
 
 namespace ve {
 
-VePipeline::VePipeline(
-        VeDevice &device,
-        const std::string& vertFilepath, 
-        const std::string& fragFilepath,
-        const PipelineConfigInfo& configInfo) : veDevice{device} {
+VePipeline::VePipeline(VeDevice& device, const std::string& vertFilepath,
+                       const std::string& fragFilepath, const PipelineConfigInfo& configInfo)
+    : veDevice{device} {
     createGraphicsPipeline(vertFilepath, fragFilepath, configInfo);
 }
 
@@ -42,11 +41,15 @@ std::vector<char> VePipeline::readFile(const std::string& filepath) {
     return buffer;
 }
 
-void VePipeline::createGraphicsPipeline(
-        const std::string& vertFilepath, 
-        const std::string& fragFilepath,
-        const PipelineConfigInfo& configInfo) {
-    
+void VePipeline::createGraphicsPipeline(const std::string& vertFilepath,
+                                        const std::string& fragFilepath,
+                                        const PipelineConfigInfo& configInfo) {
+    // Check that the given configInfo is valid.
+    assert(configInfo.pipelineLayout != VK_NULL_HANDLE &&
+           "Cannot create graphics pipeline:: no pipelineLayout provided in configInfo");
+    assert(configInfo.renderPass != VK_NULL_HANDLE &&
+           "Cannot create graphics pipeline:: no renderPass provided in configInfo");
+
     // Store the GLSL source code of our vert and frag shaders.
     auto vertCode = readFile(vertFilepath);
     auto fragCode = readFile(fragFilepath);
@@ -87,6 +90,7 @@ void VePipeline::createGraphicsPipeline(
     pipelineInfo.pInputAssemblyState = &configInfo.inputAssemblyInfo;
     pipelineInfo.pViewportState = &configInfo.viewportInfo;
     pipelineInfo.pRasterizationState = &configInfo.rasterizationInfo;
+    pipelineInfo.pMultisampleState = &configInfo.multisampleInfo;
     pipelineInfo.pColorBlendState = &configInfo.colorBlendInfo;
     pipelineInfo.pDepthStencilState = &configInfo.depthStencilInfo;
     pipelineInfo.pDynamicState = nullptr;
@@ -98,17 +102,18 @@ void VePipeline::createGraphicsPipeline(
     pipelineInfo.basePipelineIndex = -1;
     pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
 
-    if (vkCreateGraphicsPipelines(veDevice.device(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &graphicsPipeline) != VK_SUCCESS) {
+    if (vkCreateGraphicsPipelines(veDevice.device(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr,
+                                  &graphicsPipeline) != VK_SUCCESS) {
         throw std::runtime_error("failed to create graphics pipeline");
     }
-
 }
 
-void VePipeline::createShaderModule(const std::vector<char>& code, VkShaderModule* shaderModule){
+void VePipeline::createShaderModule(const std::vector<char>& code, VkShaderModule* shaderModule) {
     VkShaderModuleCreateInfo createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
     createInfo.codeSize = code.size();
-    createInfo.pCode = reinterpret_cast<const uint32_t*>(code.data()); // Expects a uint32_t * but code is GLSL code as a char vector.
+    createInfo.pCode = reinterpret_cast<const uint32_t*>(
+        code.data());  // Expects a uint32_t * but code is GLSL code as a char vector.
 
     if (vkCreateShaderModule(veDevice.device(), &createInfo, nullptr, shaderModule) != VK_SUCCESS) {
         throw std::runtime_error("failed to create shader module");
@@ -136,13 +141,15 @@ PipelineConfigInfo VePipeline::defaultPipelineConfigInfo(uint32_t width, uint32_
     configInfo.viewportInfo.pScissors = &configInfo.scissor;
 
     // Initialize inputAssemblyInfo. Our vertices will be interpreted as a triangle list.
-    configInfo.inputAssemblyInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
+    configInfo.inputAssemblyInfo.sType =
+        VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
     configInfo.inputAssemblyInfo.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
     configInfo.inputAssemblyInfo.primitiveRestartEnable = VK_FALSE;
 
     // Initialize rasterizationInfo. We aren't doing any triangle culling.
     configInfo.rasterizationInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
-    configInfo.rasterizationInfo.depthClampEnable = VK_FALSE; // If enabled, clamps depth values between 0 and 1.
+    configInfo.rasterizationInfo.depthClampEnable =
+        VK_FALSE;  // If enabled, clamps depth values between 0 and 1.
     configInfo.rasterizationInfo.rasterizerDiscardEnable = VK_FALSE;
     configInfo.rasterizationInfo.polygonMode = VK_POLYGON_MODE_FILL;
     configInfo.rasterizationInfo.lineWidth = 1.0f;
@@ -153,7 +160,7 @@ PipelineConfigInfo VePipeline::defaultPipelineConfigInfo(uint32_t width, uint32_
     configInfo.rasterizationInfo.depthBiasClamp = 0.0f;           // Optional
     configInfo.rasterizationInfo.depthBiasSlopeFactor = 0.0f;     // Optional
 
-    // Initialize multisampleInfo. We aren't doing any form of multisampling, so there 
+    // Initialize multisampleInfo. We aren't doing any form of multisampling, so there
     // will be lots of aliasing (edge pixels are either 0 or 1).
     configInfo.multisampleInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
     configInfo.multisampleInfo.sampleShadingEnable = VK_FALSE;
@@ -199,5 +206,5 @@ PipelineConfigInfo VePipeline::defaultPipelineConfigInfo(uint32_t width, uint32_
 
     return configInfo;
 }
-    
-} // namespace ve 
+
+}  // namespace ve

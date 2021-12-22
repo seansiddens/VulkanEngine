@@ -8,4 +8,4 @@ void FirstApp::run() {
     }
 }
 
-}
+}  // namespace ve

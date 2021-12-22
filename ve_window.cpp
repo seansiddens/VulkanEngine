@@ -27,4 +27,4 @@ void VeWindow::createWindowSurface(VkInstance instance, VkSurfaceKHR *surface) {
     }
 }
 
-} // namespace ve
+}  // namespace ve

@@ -346,8 +346,7 @@ void VeSwapChain::createSyncObjects() {
                               &renderFinishedSemaphores[i]) != VK_SUCCESS ||
             vkCreateFence(veDevice.device(), &fenceInfo, nullptr, &inFlightFences[i]) !=
                 VK_SUCCESS) {
-            throw std::runtime_error(
-                "failed to create synchronization objects for a frame!");
+            throw std::runtime_error("failed to create synchronization objects for a frame!");
         }
     }
 }
