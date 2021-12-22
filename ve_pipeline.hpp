@@ -17,7 +17,6 @@ struct PipelineConfigInfo {
     // Every fragment is compared against a scissor rectangle before being drawn.
     // If it lies outside the scissor, it is not rendered.
     VkRect2D scissor;
-    VkPipelineViewportStateCreateInfo viewportInfo;
 
     // The input assembler is the first stage of our graphics pipeline. It groups our
     // list of vertices into primitives. The type of primitive (triangle, triangle strip,
