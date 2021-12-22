@@ -1,7 +1,7 @@
 CFLAGS = -std=c++17 -O2
 LDFLAGS = -lglfw -lvulkan -ldl -lpthread -lX11 -lXxf86vm -lXrandr -lXi
 
-.PHONY: all clean test
+.PHONY: all clean test format
 
 all: VulkanEngine
 
@@ -13,3 +13,6 @@ clean:
 
 test: all
 	./VulkanEngine
+
+format: 
+	clang-format -i *.cpp *.hpp *.[ch] --style="{BasedOnStyle: Google, IndentWidth: 4, ColumnLimit: 100}"
