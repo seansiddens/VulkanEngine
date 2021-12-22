@@ -15,7 +15,7 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
     const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData,
     void *pUserData) {
 
-    std::cerr << "validation layer: " << pCallbackData->pMessage << std::endl;
+    std::cerr << "validation layer: " << pCallbackData->pMessage << "\n";
 
     return VK_FALSE;
 }
@@ -344,17 +344,17 @@ QueueFamilyIndices VeDevice::findQueueFamilies(VkPhysicalDevice device) {
     int i = 0;
     for (const auto &queueFamily : queueFamilies) {
         if (queueFamily.queueCount > 0 && queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
-        indices.graphicsFamily = i;
-        indices.graphicsFamilyHasValue = true;
+            indices.graphicsFamily = i;
+            indices.graphicsFamilyHasValue = true;
         }
         VkBool32 presentSupport = false;
         vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface_, &presentSupport);
         if (queueFamily.queueCount > 0 && presentSupport) {
-        indices.presentFamily = i;
-        indices.presentFamilyHasValue = true;
+            indices.presentFamily = i;
+            indices.presentFamilyHasValue = true;
         }
         if (indices.isComplete()) {
-        break;
+            break;
         }
 
         i++;
