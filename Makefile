@@ -15,4 +15,4 @@ test: all
 	./VulkanEngine
 
 format: 
-	clang-format -i *.cpp *.hpp *.[ch] --style="{BasedOnStyle: Google, IndentWidth: 4, ColumnLimit: 100}"
+	clang-format -i *.cpp *.hpp --style="{BasedOnStyle: Google, IndentWidth: 4, ColumnLimit: 100}"
