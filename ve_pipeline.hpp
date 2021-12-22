@@ -28,10 +28,17 @@ struct PipelineConfigInfo {
     // The rasterization stage breaks up our geometry into pixels for each fragment our primitives overlap.
     VkPipelineRasterizationStateCreateInfo rasterizationInfo;
 
+    // TODO(sean): Document more info on what this is.
     VkPipelineMultisampleStateCreateInfo multisampleInfo;
+
+    // TODO(sean): Document more info on what this is.
     VkPipelineColorBlendAttachmentState colorBlendAttachment;
     VkPipelineColorBlendStateCreateInfo colorBlendInfo;
+
+    // For each pixel, the depth buffer stores the depth of the closet fragment. When 
+    // drawing, fragments behind this are discarded.
     VkPipelineDepthStencilStateCreateInfo depthStencilInfo;
+
     VkPipelineLayout pipelineLayout = nullptr;
     VkRenderPass renderPass = nullptr;
     uint32_t subpass = 0;
@@ -45,13 +52,14 @@ public:
         const std::string& fragFilepath, 
         const PipelineConfigInfo &configInfo);
 
-    ~VePipeline() {}
+    ~VePipeline();
 
     // Delete copy constructors to avoid accidentally duplicating pointers to our Vulkan
     // objects.
     VePipeline(const VePipeline&) = delete;
     void operator=(const VePipeline&) = delete;
 
+    // Returns an initialized default pipeline configuration.
     static PipelineConfigInfo defaultPipelineConfigInfo(uint32_t width, uint32_t height);
 
 private:
