@@ -8,6 +8,7 @@ namespace ve {
 
 class VeSwapChain {
    public:
+    // Maximum number of command buffers that can be submitted to the graphics queue at once.
     static constexpr int MAX_FRAMES_IN_FLIGHT = 2;
 
     VeSwapChain(VeDevice &deviceRef, VkExtent2D windowExtent);
@@ -19,7 +20,7 @@ class VeSwapChain {
     VkFramebuffer getFrameBuffer(int index) { return swapChainFramebuffers[index]; }
     VkRenderPass getRenderPass() { return renderPass; }
     VkImageView getImageView(int index) { return swapChainImageViews[index]; }
-    size_t imageCount() { return swapChainImages.size(); }
+    size_t imageCount() { return swapChainImages.size(); }  // Number of framebuffers.
     VkFormat getSwapChainImageFormat() { return swapChainImageFormat; }
     VkExtent2D getSwapChainExtent() { return swapChainExtent; }
     uint32_t width() { return swapChainExtent.width; }

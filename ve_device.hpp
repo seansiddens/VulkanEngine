@@ -86,7 +86,7 @@ class VeDevice {
     VkDebugUtilsMessengerEXT debugMessenger;
     VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
     VeWindow &veWindow;
-    VkCommandPool commandPool;
+    VkCommandPool commandPool;  // Command buffers are allocated from this memory.
 
     VkDevice device_;
     VkSurfaceKHR surface_;
