@@ -52,7 +52,7 @@ VeSwapChain::~VeSwapChain() {
         vkDestroyFence(veDevice.device(), inFlightFences[i], nullptr);
     }
 }
-
+// Fetches the index of the frame we should render to next. Handles CPU and GPU synchronization.
 VkResult VeSwapChain::acquireNextImage(uint32_t *imageIndex) {
     vkWaitForFences(veDevice.device(), 1, &inFlightFences[currentFrame], VK_TRUE,
                     std::numeric_limits<uint64_t>::max());
@@ -252,6 +252,7 @@ void VeSwapChain::createRenderPass() {
     renderPassInfo.dependencyCount = 1;
     renderPassInfo.pDependencies = &dependency;
 
+    // Create render pass.
     if (vkCreateRenderPass(veDevice.device(), &renderPassInfo, nullptr, &renderPass) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to create render pass!");

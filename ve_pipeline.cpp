@@ -19,6 +19,11 @@ VePipeline::~VePipeline() {
     vkDestroyPipeline(veDevice.device(), graphicsPipeline, nullptr);
 }
 
+void VePipeline::bind(VkCommandBuffer commandBuffer) {
+    // Here we can specify if the pipeline is used for graphics, compute, or ray tracing.
+    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
+}
+
 std::vector<char> VePipeline::readFile(const std::string& filepath) {
     // Open file and seek to end of filestream.
     std::ifstream file(filepath, std::ios::ate | std::ios::binary);

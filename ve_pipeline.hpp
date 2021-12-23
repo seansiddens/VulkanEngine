@@ -39,6 +39,7 @@ struct PipelineConfigInfo {
     // drawing, fragments behind this are discarded.
     VkPipelineDepthStencilStateCreateInfo depthStencilInfo;
 
+    // These values are initialized by the application layer.
     VkPipelineLayout pipelineLayout = nullptr;
     VkRenderPass renderPass = nullptr;
     uint32_t subpass = 0;
@@ -55,6 +56,8 @@ class VePipeline {
     // objects.
     VePipeline(const VePipeline&) = delete;
     void operator=(const VePipeline&) = delete;
+
+    void bind(VkCommandBuffer commandBuffer);
 
     // Returns an initialized default pipeline configuration.
     static PipelineConfigInfo defaultPipelineConfigInfo(uint32_t width, uint32_t height);
