@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "ve_device.hpp"
+#include "ve_model.hpp"
 #include "ve_pipeline.hpp"
 #include "ve_swap_chain.hpp"
 #include "ve_window.hpp"
@@ -13,7 +14,7 @@ namespace ve {
 class FirstApp {
    public:
     static constexpr int WIDTH = 800;
-    static constexpr int HEIGHT = 800;
+    static constexpr int HEIGHT = 600;
 
     FirstApp();
     ~FirstApp();
@@ -25,6 +26,7 @@ class FirstApp {
     void run();
 
    private:
+    void loadModels();
     void createPipelineLayout();
     void createPipeline();
     void createCommandBuffers();
@@ -36,6 +38,7 @@ class FirstApp {
     std::unique_ptr<VePipeline> vePipeline;
     VkPipelineLayout pipelineLayout;
     std::vector<VkCommandBuffer> commandBuffers;
+    std::unique_ptr<VeModel> veModel;
 };
 
 }  // namespace ve

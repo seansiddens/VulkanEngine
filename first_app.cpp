@@ -7,6 +7,7 @@
 namespace ve {
 
 FirstApp::FirstApp() {
+    loadModels();
     createPipelineLayout();
     createPipeline();
     createCommandBuffers();
@@ -96,15 +97,15 @@ void FirstApp::createCommandBuffers() {
         // Bind our pipeline.
         vePipeline->bind(commandBuffers[i]);
 
-        // Draw three vertices.
-        vkCmdDraw(commandBuffers[i], 3, 1, 0, 0);
+        // Draw.
+        veModel->bind(commandBuffers[i]);
+        veModel->draw(commandBuffers[i]);
 
         // Finish recording commands
         vkCmdEndRenderPass(commandBuffers[i]);
         if (vkEndCommandBuffer(commandBuffers[i]) != VK_SUCCESS) {
             throw std::runtime_error("failed to record command buffer!");
         }
-
     }
 };
 
@@ -116,12 +117,20 @@ void FirstApp::drawFrame() {
         throw std::runtime_error("failed to acquire next swap chain image!");
     }
 
-    // Sumbit command buffer to the device graphics queue. Swap chain will submit the image to be 
+    // Sumbit command buffer to the device graphics queue. Swap chain will submit the image to be
     // rendered to.
     result = veSwapChain.submitCommandBuffers(&commandBuffers[imageIndex], &imageIndex);
     if (result != VK_SUCCESS) {
         throw std::runtime_error("failed to present swap chain image!");
     }
 };
+
+void FirstApp::loadModels() {
+    std::vector<VeModel::Vertex> vertices = {{{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+                                             {{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
+                                             {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}};
+
+    veModel = std::make_unique<VeModel>(veDevice, vertices);
+}
 
 }  // namespace ve
