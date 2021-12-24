@@ -15,7 +15,7 @@ class VeSwapChain {
     ~VeSwapChain();
 
     VeSwapChain(const VeSwapChain &) = delete;
-    void operator=(const VeSwapChain &) = delete;
+    VeSwapChain &operator=(const VeSwapChain &) = delete;
 
     VkFramebuffer getFrameBuffer(int index) { return swapChainFramebuffers[index]; }
     VkRenderPass getRenderPass() { return renderPass; }

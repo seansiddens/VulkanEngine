@@ -55,7 +55,7 @@ class VePipeline {
     // Delete copy constructors to avoid accidentally duplicating pointers to our Vulkan
     // objects.
     VePipeline(const VePipeline&) = delete;
-    void operator=(const VePipeline&) = delete;
+    VePipeline& operator=(const VePipeline&) = delete;
 
     void bind(VkCommandBuffer commandBuffer);
 
