@@ -1,6 +1,7 @@
 #include "first_app.hpp"
 
 #include <array>
+#include <cassert>
 #include <iostream>
 #include <stdexcept>
 
@@ -16,6 +17,9 @@ FirstApp::FirstApp() {
 FirstApp::~FirstApp() { vkDestroyPipelineLayout(veDevice.device(), pipelineLayout, nullptr); }
 
 void FirstApp::run() {
+    // Check the maximum size of push constants available on the device.
+    std::cout << "maxPushConstantsSize  = " << veDevice.properties.limits.maxPushConstantsSize << "\n";
+
     while (!veWindow.shouldClose()) {
         glfwPollEvents();
         drawFrame();
@@ -39,6 +43,9 @@ void FirstApp::createPipelineLayout() {
 }
 
 void FirstApp::createPipeline() {
+    assert(veSwapChain != nullptr && "Cannot create swap chain before pipeline!");
+    assert(pipelineLayout != nullptr && "Cannot create pipeline before layout");
+
     PipelineConfigInfo pipelineConfig{};
     VePipeline::defaultPipelineConfigInfo(pipelineConfig);
     pipelineConfig.renderPass = veSwapChain->getRenderPass();
@@ -57,8 +64,20 @@ void FirstApp::recreateSwapChain() {
 
     // Wait until current swapchain is no longer being used before we create the new one.
     vkDeviceWaitIdle(veDevice.device());
-    // Create new swap chain.
-    veSwapChain = std::make_unique<VeSwapChain>(veDevice, extent);
+
+    if (veSwapChain == nullptr) {
+        // Create new swap chain.
+        veSwapChain = std::make_unique<VeSwapChain>(veDevice, extent);
+    } else {
+        // Constructs a swap chain w/ a pointer to the previous one.
+        veSwapChain = std::make_unique<VeSwapChain>(veDevice, extent, std::move(veSwapChain));
+        if (veSwapChain->imageCount() != commandBuffers.size()) {
+            freeCommandBuffers();
+            createCommandBuffers();
+        }
+    }
+
+    // TODO: If pipeline is compatible, pipeline does not have to be recreated.
     createPipeline();  // Pipeline depends on swap chain so it must be remade.
 }
 
@@ -79,6 +98,12 @@ void FirstApp::createCommandBuffers() {
         throw std::runtime_error("failed to allocate command buffers");
     }
 };
+
+void FirstApp::freeCommandBuffers() {
+    vkFreeCommandBuffers(veDevice.device(), veDevice.getCommandPool(),
+                         static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
+    commandBuffers.clear();
+}
 
 void FirstApp::recordCommandBuffer(int imageIndex) {
     VkCommandBufferBeginInfo beginInfo{};
@@ -152,6 +177,7 @@ void FirstApp::drawFrame() {
     result = veSwapChain->submitCommandBuffers(&commandBuffers[imageIndex], &imageIndex);
     if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR ||
         veWindow.wasWindowResized()) {
+        // Every frame we are checking if the window was resized.
         veWindow.resetWindowResizedFlag();
         recreateSwapChain();
         return;

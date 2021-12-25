@@ -13,6 +13,20 @@ namespace ve {
 // Constructor
 VeSwapChain::VeSwapChain(VeDevice &deviceRef, VkExtent2D extent)
     : veDevice{deviceRef}, windowExtent{extent} {
+    init();
+}
+
+VeSwapChain::VeSwapChain(VeDevice &deviceRef, VkExtent2D extent,
+                         std::shared_ptr<VeSwapChain> previous)
+    : veDevice{deviceRef}, windowExtent{extent}, oldSwapChain{previous} {
+    init();
+
+    // Previous swap chain is only needed during initialization, so it can be cleaned up once it is
+    // no longer needed.
+    oldSwapChain = nullptr;
+}
+
+void VeSwapChain::init() {
     createSwapChain();
     createImageViews();
     createRenderPass();
@@ -156,7 +170,7 @@ void VeSwapChain::createSwapChain() {
     createInfo.presentMode = presentMode;
     createInfo.clipped = VK_TRUE;
 
-    createInfo.oldSwapchain = VK_NULL_HANDLE;
+    createInfo.oldSwapchain = oldSwapChain == nullptr ? VK_NULL_HANDLE : oldSwapChain->swapChain;
 
     if (vkCreateSwapchainKHR(veDevice.device(), &createInfo, nullptr, &swapChain) != VK_SUCCESS) {
         throw std::runtime_error("failed to create swap chain!");
