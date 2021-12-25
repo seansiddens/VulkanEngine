@@ -11,12 +11,16 @@ namespace ve {
 // aspect of a pipeline and a particular configuration can be shared across multiple
 // pipeline instances.
 struct PipelineConfigInfo {
+    // Remove copy constructors.
+    PipelineConfigInfo(const PipelineConfigInfo&) = delete;
+    PipelineConfigInfo& operator=(const PipelineConfigInfo&) = delete;
+
+    // Contains information about the viewport and the scissor.
     // The viewport describes how to transform from our gl_Position (-1 to 1) to pixels
     // in the image we are rendering to (0 to WIDTH/HEIHT).
-    VkViewport viewport;
     // Every fragment is compared against a scissor rectangle before being drawn.
     // If it lies outside the scissor, it is not rendered.
-    VkRect2D scissor;
+    VkPipelineViewportStateCreateInfo viewportInfo;
 
     // The input assembler is the first stage of our graphics pipeline. It groups our
     // list of vertices into primitives. The type of primitive (triangle, triangle strip,
@@ -39,6 +43,9 @@ struct PipelineConfigInfo {
     // drawing, fragments behind this are discarded.
     VkPipelineDepthStencilStateCreateInfo depthStencilInfo;
 
+    std::vector<VkDynamicState> dynamicStateEnables;
+    VkPipelineDynamicStateCreateInfo dynamicStateInfo;
+
     // These values are initialized by the application layer.
     VkPipelineLayout pipelineLayout = nullptr;
     VkRenderPass renderPass = nullptr;
@@ -59,8 +66,8 @@ class VePipeline {
 
     void bind(VkCommandBuffer commandBuffer);
 
-    // Returns an initialized default pipeline configuration.
-    static PipelineConfigInfo defaultPipelineConfigInfo(uint32_t width, uint32_t height);
+    // Initializes a default pipeline configuration.
+    static void defaultPipelineConfigInfo(PipelineConfigInfo& configInfo);
 
    private:
     // Returns a buffer containing the contents of a file.

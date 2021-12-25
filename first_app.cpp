@@ -39,8 +39,8 @@ void FirstApp::createPipelineLayout() {
 }
 
 void FirstApp::createPipeline() {
-    auto pipelineConfig =
-        VePipeline::defaultPipelineConfigInfo(veSwapChain->width(), veSwapChain->height());
+    PipelineConfigInfo pipelineConfig{};
+    VePipeline::defaultPipelineConfigInfo(pipelineConfig);
     pipelineConfig.renderPass = veSwapChain->getRenderPass();
     pipelineConfig.pipelineLayout = pipelineLayout;
     vePipeline = std::make_unique<VePipeline>(veDevice, "shaders/simple_shader.vert.spv",
@@ -105,6 +105,18 @@ void FirstApp::recordCommandBuffer(int imageIndex) {
     // VK_SUBPASS_INLINE indicates that subsequent commands are recorded directly into the
     // primary command buffer. No secondary command buffers are used.
     vkCmdBeginRenderPass(commandBuffers[imageIndex], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+    // Create viewport.
+    VkViewport viewport{};
+    viewport.x = 0.0f;
+    viewport.y = 0.0f;
+    viewport.width = static_cast<float>(veSwapChain->getSwapChainExtent().width);
+    viewport.height = static_cast<float>(veSwapChain->getSwapChainExtent().height);
+    viewport.minDepth = 0.0f;
+    viewport.maxDepth = 1.0f;
+    VkRect2D scissor{{0, 0}, veSwapChain->getSwapChainExtent()};
+    vkCmdSetViewport(commandBuffers[imageIndex], 0, 1, &viewport);
+    vkCmdSetScissor(commandBuffers[imageIndex], 0, 1, &scissor);
 
     // Bind our pipeline.
     vePipeline->bind(commandBuffers[imageIndex]);
