@@ -13,13 +13,18 @@
 
 namespace ve {
 
+// In the shaders, Vulkan expects the data to be aligned such that:
+// - scalars aligned by N ( = 4 bytes given 32 bit floats)
+// - vec2 aligned by 2N ( = 8 bytes)
+// - vec3 and vec4 aligned by 4N ( = 16 bytes)
 struct SimplePushConstantData {
+    glm::mat2 transform{1.0f};
     glm::vec2 offset;
-    glm::vec3 color;
+    alignas(16) glm::vec3 color;  // Align to 16 bytes.
 };
 
 FirstApp::FirstApp() {
-    loadModels();
+    loadGameObjects();
     createPipelineLayout();
     recreateSwapChain();
     createCommandBuffers();
@@ -41,11 +46,18 @@ void FirstApp::run() {
     vkDeviceWaitIdle(veDevice.device());
 }
 
-void FirstApp::loadModels() {
+void FirstApp::loadGameObjects() {
     std::vector<VeModel::Vertex> vertices = {{{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
                                              {{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
                                              {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}};
-    veModel = std::make_unique<VeModel>(veDevice, vertices);
+    auto veModel = std::make_shared<VeModel>(veDevice, vertices);
+
+    auto triangle = VeGameObject::createGameObject();
+    triangle.model = veModel;
+    triangle.color = {.1f, .8f, .1f};
+    triangle.transform2d.translation.x = .2f;
+
+    gameObjects.push_back(std::move(triangle));
 }
 
 void FirstApp::createPipelineLayout() {
@@ -176,7 +188,7 @@ void FirstApp::recordCommandBuffer(int imageIndex) {
     renderPassInfo.renderArea.extent = veSwapChain->getSwapChainExtent();
 
     std::array<VkClearValue, 2> clearValues{};
-    clearValues[0].color = {0.1f, 0.15f, 0.2f, 1.0f};
+    clearValues[0].color = {0.01f, 0.015f, 0.02f, 1.0f};
     clearValues[1].depthStencil = {1.0f, 0};
     renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
     renderPassInfo.pClearValues = clearValues.data();
@@ -197,25 +209,29 @@ void FirstApp::recordCommandBuffer(int imageIndex) {
     vkCmdSetViewport(commandBuffers[imageIndex], 0, 1, &viewport);
     vkCmdSetScissor(commandBuffers[imageIndex], 0, 1, &scissor);
 
-    // Bind our pipeline and model.
-    vePipeline->bind(commandBuffers[imageIndex]);
-    veModel->bind(commandBuffers[imageIndex]);
-
-    for (int j = 0; j < 4; j++) {
-        SimplePushConstantData push{};
-        push.offset = {0.0f, -0.4f + j * 0.25f};
-        push.color = {0.0f, 0.0f, 0.2f + 0.2 * j};
-
-        vkCmdPushConstants(commandBuffers[imageIndex], pipelineLayout,
-                           VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0,
-                           sizeof(SimplePushConstantData), &push);
-        veModel->draw(commandBuffers[imageIndex]);
-    }
+    renderGameObjects(commandBuffers[imageIndex]);
 
     // Finish recording commands
     vkCmdEndRenderPass(commandBuffers[imageIndex]);
     if (vkEndCommandBuffer(commandBuffers[imageIndex]) != VK_SUCCESS) {
         throw std::runtime_error("failed to record command buffer!");
+    }
+}
+
+void FirstApp::renderGameObjects(VkCommandBuffer commandBuffer) {
+    vePipeline->bind(commandBuffer);
+
+    for (auto& obj : gameObjects) {
+        SimplePushConstantData push{};
+        push.offset = obj.transform2d.translation;
+        push.color = obj.color;
+        push.transform = obj.transform2d.mat2();
+
+        vkCmdPushConstants(commandBuffer, pipelineLayout,
+                           VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0,
+                           sizeof(SimplePushConstantData), &push);
+        obj.model->bind(commandBuffer);
+        obj.model->draw(commandBuffer);
     }
 }
 
