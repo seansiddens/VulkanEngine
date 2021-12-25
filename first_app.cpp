@@ -1,11 +1,22 @@
 #include "first_app.hpp"
 
+// libs
+#define GLM_FORCE_RADIANS
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
+#include <glm/glm.hpp>
+
+// std
 #include <array>
 #include <cassert>
 #include <iostream>
 #include <stdexcept>
 
 namespace ve {
+
+struct SimplePushConstantData {
+    glm::vec2 offset;
+    glm::vec3 color;
+};
 
 FirstApp::FirstApp() {
     loadModels();
@@ -18,7 +29,8 @@ FirstApp::~FirstApp() { vkDestroyPipelineLayout(veDevice.device(), pipelineLayou
 
 void FirstApp::run() {
     // Check the maximum size of push constants available on the device.
-    std::cout << "maxPushConstantsSize  = " << veDevice.properties.limits.maxPushConstantsSize << "\n";
+    std::cout << "maxPushConstantsSize  = " << veDevice.properties.limits.maxPushConstantsSize
+              << "\n";
 
     while (!veWindow.shouldClose()) {
         glfwPollEvents();
@@ -29,13 +41,25 @@ void FirstApp::run() {
     vkDeviceWaitIdle(veDevice.device());
 }
 
+void FirstApp::loadModels() {
+    std::vector<VeModel::Vertex> vertices = {{{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+                                             {{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
+                                             {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}};
+    veModel = std::make_unique<VeModel>(veDevice, vertices);
+}
+
 void FirstApp::createPipelineLayout() {
+    VkPushConstantRange pushConstantRange{};
+    pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+    pushConstantRange.offset = 0;
+    pushConstantRange.size = sizeof(SimplePushConstantData);
+
     VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
     pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
     pipelineLayoutInfo.setLayoutCount = 0;
     pipelineLayoutInfo.pSetLayouts = nullptr;
-    pipelineLayoutInfo.pushConstantRangeCount = 0;
-    pipelineLayoutInfo.pPushConstantRanges = nullptr;
+    pipelineLayoutInfo.pushConstantRangeCount = 1;
+    pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
     if (vkCreatePipelineLayout(veDevice.device(), &pipelineLayoutInfo, nullptr, &pipelineLayout) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to create pipeline layout!");
@@ -52,6 +76,60 @@ void FirstApp::createPipeline() {
     pipelineConfig.pipelineLayout = pipelineLayout;
     vePipeline = std::make_unique<VePipeline>(veDevice, "shaders/simple_shader.vert.spv",
                                               "shaders/simple_shader.frag.spv", pipelineConfig);
+}
+
+void FirstApp::createCommandBuffers() {
+    // We are allocating a command buffer for each of our framebuffers.
+    commandBuffers.resize(veSwapChain->imageCount());
+
+    // Allocate the command buffers.
+    VkCommandBufferAllocateInfo allocInfo{};
+    allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+    // Only primary cmd buffers can be submitted.
+    allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+    allocInfo.commandPool = veDevice.getCommandPool();
+    allocInfo.commandBufferCount = static_cast<uint32_t>(commandBuffers.size());
+
+    if (vkAllocateCommandBuffers(veDevice.device(), &allocInfo, commandBuffers.data()) !=
+        VK_SUCCESS) {
+        throw std::runtime_error("failed to allocate command buffers");
+    }
+}
+
+void FirstApp::freeCommandBuffers() {
+    vkFreeCommandBuffers(veDevice.device(), veDevice.getCommandPool(),
+                         static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
+    commandBuffers.clear();
+}
+
+void FirstApp::drawFrame() {
+    // Fetch the index of the image we are rendering to next.
+    uint32_t imageIndex;
+    auto result = veSwapChain->acquireNextImage(&imageIndex);
+    if (result == VK_ERROR_OUT_OF_DATE_KHR) {
+        // Error occurs if window has been resized.
+        recreateSwapChain();
+        return;
+    }
+
+    if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
+        throw std::runtime_error("failed to acquire next swap chain image!");
+    }
+
+    recordCommandBuffer(imageIndex);
+    // Sumbit command buffer to the device graphics queue. Swap chain will submit the image to be
+    // rendered to.
+    result = veSwapChain->submitCommandBuffers(&commandBuffers[imageIndex], &imageIndex);
+    if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR ||
+        veWindow.wasWindowResized()) {
+        // Every frame we are checking if the window was resized.
+        veWindow.resetWindowResizedFlag();
+        recreateSwapChain();
+        return;
+    }
+    if (result != VK_SUCCESS) {
+        throw std::runtime_error("failed to present swap chain image!");
+    }
 }
 
 void FirstApp::recreateSwapChain() {
@@ -79,30 +157,6 @@ void FirstApp::recreateSwapChain() {
 
     // TODO: If pipeline is compatible, pipeline does not have to be recreated.
     createPipeline();  // Pipeline depends on swap chain so it must be remade.
-}
-
-void FirstApp::createCommandBuffers() {
-    // We are allocating a command buffer for each of our framebuffers.
-    commandBuffers.resize(veSwapChain->imageCount());
-
-    // Allocate the command buffers.
-    VkCommandBufferAllocateInfo allocInfo{};
-    allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-    // Only primary cmd buffers can be submitted.
-    allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-    allocInfo.commandPool = veDevice.getCommandPool();
-    allocInfo.commandBufferCount = static_cast<uint32_t>(commandBuffers.size());
-
-    if (vkAllocateCommandBuffers(veDevice.device(), &allocInfo, commandBuffers.data()) !=
-        VK_SUCCESS) {
-        throw std::runtime_error("failed to allocate command buffers");
-    }
-};
-
-void FirstApp::freeCommandBuffers() {
-    vkFreeCommandBuffers(veDevice.device(), veDevice.getCommandPool(),
-                         static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
-    commandBuffers.clear();
 }
 
 void FirstApp::recordCommandBuffer(int imageIndex) {
@@ -143,56 +197,26 @@ void FirstApp::recordCommandBuffer(int imageIndex) {
     vkCmdSetViewport(commandBuffers[imageIndex], 0, 1, &viewport);
     vkCmdSetScissor(commandBuffers[imageIndex], 0, 1, &scissor);
 
-    // Bind our pipeline.
+    // Bind our pipeline and model.
     vePipeline->bind(commandBuffers[imageIndex]);
-
-    // Draw.
     veModel->bind(commandBuffers[imageIndex]);
-    veModel->draw(commandBuffers[imageIndex]);
+
+    for (int j = 0; j < 4; j++) {
+        SimplePushConstantData push{};
+        push.offset = {0.0f, -0.4f + j * 0.25f};
+        push.color = {0.0f, 0.0f, 0.2f + 0.2 * j};
+
+        vkCmdPushConstants(commandBuffers[imageIndex], pipelineLayout,
+                           VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0,
+                           sizeof(SimplePushConstantData), &push);
+        veModel->draw(commandBuffers[imageIndex]);
+    }
 
     // Finish recording commands
     vkCmdEndRenderPass(commandBuffers[imageIndex]);
     if (vkEndCommandBuffer(commandBuffers[imageIndex]) != VK_SUCCESS) {
         throw std::runtime_error("failed to record command buffer!");
     }
-}
-
-void FirstApp::drawFrame() {
-    // Fetch the index of the image we are rendering to next.
-    uint32_t imageIndex;
-    auto result = veSwapChain->acquireNextImage(&imageIndex);
-    if (result == VK_ERROR_OUT_OF_DATE_KHR) {
-        // Error occurs if window has been resized.
-        recreateSwapChain();
-        return;
-    }
-
-    if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
-        throw std::runtime_error("failed to acquire next swap chain image!");
-    }
-
-    recordCommandBuffer(imageIndex);
-    // Sumbit command buffer to the device graphics queue. Swap chain will submit the image to be
-    // rendered to.
-    result = veSwapChain->submitCommandBuffers(&commandBuffers[imageIndex], &imageIndex);
-    if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR ||
-        veWindow.wasWindowResized()) {
-        // Every frame we are checking if the window was resized.
-        veWindow.resetWindowResizedFlag();
-        recreateSwapChain();
-        return;
-    }
-    if (result != VK_SUCCESS) {
-        throw std::runtime_error("failed to present swap chain image!");
-    }
-};
-
-void FirstApp::loadModels() {
-    std::vector<VeModel::Vertex> vertices = {{{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
-                                             {{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
-                                             {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}};
-
-    veModel = std::make_unique<VeModel>(veDevice, vertices);
 }
 
 }  // namespace ve
