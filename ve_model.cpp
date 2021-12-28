@@ -57,10 +57,11 @@ std::vector<VkVertexInputBindingDescription> VeModel::Vertex::getBindingDescript
 std::vector<VkVertexInputAttributeDescription> VeModel::Vertex::getAttributeDescriptions() {
     std::vector<VkVertexInputAttributeDescription> attributeDescriptions(2);
     // Both attributes have the same binding since we are interleaving them in the same buffer.
+
     // Position
     attributeDescriptions[0].binding = 0;
     attributeDescriptions[0].location = 0;
-    attributeDescriptions[0].format = VK_FORMAT_R32G32_SFLOAT;  // vec2
+    attributeDescriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;  // vec3
     attributeDescriptions[0].offset = offsetof(Vertex, position);
     // Color
     attributeDescriptions[1].binding = 0;

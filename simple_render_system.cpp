@@ -19,8 +19,7 @@ namespace ve {
 // - vec2 aligned by 2N ( = 8 bytes)
 // - vec3 and vec4 aligned by 4N ( = 16 bytes)
 struct SimplePushConstantData {
-    glm::mat2 transform{1.0f};
-    glm::vec2 offset;
+    glm::mat4 transform{1.0f};
     alignas(16) glm::vec3 color;  // Align to 16 bytes.
 };
 
@@ -65,22 +64,18 @@ void SimpleRenderSystem::createPipeline(VkRenderPass renderPass) {
 
 void SimpleRenderSystem::renderGameObjects(VkCommandBuffer commandBuffer,
                                            std::vector<VeGameObject>& gameObjects) {
-    // update
-    int i = 0;
-    for (auto& obj : gameObjects) {
-        i += 1;
-        obj.transform2d.rotation =
-            glm::mod<float>(obj.transform2d.rotation + 0.0001f * i, 2.f * glm::pi<float>());
-    }
-
     // render
     vePipeline->bind(commandBuffer);
 
     for (auto& obj : gameObjects) {
+        // Rotate about vertical axis.
+        obj.transform.rotation.y = glm::mod(obj.transform.rotation.y + 0.01f, glm::two_pi<float>());
+        obj.transform.rotation.x =
+            glm::mod(obj.transform.rotation.x + 0.005f, glm::two_pi<float>());
+
         SimplePushConstantData push{};
-        push.offset = obj.transform2d.translation;
         push.color = obj.color;
-        push.transform = obj.transform2d.mat2();
+        push.transform = obj.transform.mat4();
 
         vkCmdPushConstants(commandBuffer, pipelineLayout,
                            VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0,

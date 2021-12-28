@@ -147,7 +147,7 @@ void VeRenderer::recreateSwapChain() {
 
         if (!oldSwapChain->compareSwapFormats(*veSwapChain.get())) {
             throw std::runtime_error("Swap chain image/depth format has changed!");
-        } 
+        }
     }
 }
 

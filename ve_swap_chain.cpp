@@ -380,14 +380,15 @@ VkSurfaceFormatKHR VeSwapChain::chooseSwapSurfaceFormat(
 }
 
 VkPresentModeKHR VeSwapChain::chooseSwapPresentMode(
-    // If available, use Mailbox present mode.
     const std::vector<VkPresentModeKHR> &availablePresentModes) {
-    for (const auto &availablePresentMode : availablePresentModes) {
-        if (availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR) {
-            std::cout << "Present mode: Mailbox" << std::endl;
-            return availablePresentMode;
-        }
-    }
+    // TODO: Uncomment to turn off V-Sync.
+    // // If available, use Mailbox present mode.
+    // for (const auto &availablePresentMode : availablePresentModes) {
+    //     if (availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR) {
+    //         std::cout << "Present mode: Mailbox" << std::endl;
+    //         return availablePresentMode;
+    //     }
+    // }
 
     // for (const auto &availablePresentMode : availablePresentModes) {
     //   if (availablePresentMode == VK_PRESENT_MODE_IMMEDIATE_KHR) {
