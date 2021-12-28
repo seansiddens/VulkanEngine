@@ -56,6 +56,7 @@ void VeRenderer::endFrame() {
     }
 
     isFrameStarted = false;
+    currentFrameIndex = (currentFrameIndex + 1) % VeSwapChain::MAX_FRAMES_IN_FLIGHT;
 }
 
 void VeRenderer::beginSwapChainRenderPass(VkCommandBuffer commandBuffer) {
@@ -103,7 +104,7 @@ void VeRenderer::endSwapChainRenderPass(VkCommandBuffer commandBuffer) {
 
 void VeRenderer::createCommandBuffers() {
     // We are allocating a command buffer for each of our framebuffers.
-    commandBuffers.resize(veSwapChain->imageCount());
+    commandBuffers.resize(VeSwapChain::MAX_FRAMES_IN_FLIGHT);
 
     // Allocate the command buffers.
     VkCommandBufferAllocateInfo allocInfo{};
@@ -140,12 +141,13 @@ void VeRenderer::recreateSwapChain() {
         // Create new swap chain.
         veSwapChain = std::make_unique<VeSwapChain>(veDevice, extent);
     } else {
+        std::shared_ptr<VeSwapChain> oldSwapChain = std::move(veSwapChain);
         // Constructs a swap chain w/ a pointer to the previous one.
-        veSwapChain = std::make_unique<VeSwapChain>(veDevice, extent, std::move(veSwapChain));
-        if (veSwapChain->imageCount() != commandBuffers.size()) {
-            freeCommandBuffers();
-            createCommandBuffers();
-        }
+        veSwapChain = std::make_unique<VeSwapChain>(veDevice, extent, oldSwapChain);
+
+        if (!oldSwapChain->compareSwapFormats(*veSwapChain.get())) {
+            throw std::runtime_error("Swap chain image/depth format has changed!");
+        } 
     }
 }
 
