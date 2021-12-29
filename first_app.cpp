@@ -1,6 +1,7 @@
 #include "first_app.hpp"
 
 #include "simple_render_system.hpp"
+#include "ve_camera.hpp"
 
 // libs
 #define GLM_FORCE_RADIANS
@@ -26,14 +27,18 @@ void FirstApp::run() {
               << "\n";
 
     SimpleRenderSystem simpleRenderSystem{veDevice, veRenderer.getSwapChainRenderPass()};
+    VeCamera camera{};
 
     while (!veWindow.shouldClose()) {
         glfwPollEvents();
 
+        auto aspect = veRenderer.getAspectRatio();
+        camera.setOrthographicProjection(-aspect, aspect, -1, 1, -1, 1);
+
         // beginFrame() will return a nullptr if swap chain needs to be recreated (window resized).
         if (auto commandBuffer = veRenderer.beginFrame()) {
             veRenderer.beginSwapChainRenderPass(commandBuffer);
-            simpleRenderSystem.renderGameObjects(commandBuffer, gameObjects);
+            simpleRenderSystem.renderGameObjects(commandBuffer, gameObjects, camera);
             veRenderer.endSwapChainRenderPass(commandBuffer);
             veRenderer.endFrame();
         }

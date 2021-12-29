@@ -4,6 +4,7 @@
 #include <memory>
 #include <vector>
 
+#include "ve_camera.hpp"
 #include "ve_device.hpp"
 #include "ve_game_object.hpp"
 #include "ve_pipeline.hpp"
@@ -19,7 +20,8 @@ class SimpleRenderSystem {
     SimpleRenderSystem(const SimpleRenderSystem &) = delete;
     SimpleRenderSystem &operator=(const SimpleRenderSystem &) = delete;
 
-    void renderGameObjects(VkCommandBuffer commandBuffer, std::vector<VeGameObject> &gameObjects);
+    void renderGameObjects(VkCommandBuffer commandBuffer, std::vector<VeGameObject> &gameObjects,
+                           const VeCamera &camera);
 
    private:
     void createPipelineLayout();
