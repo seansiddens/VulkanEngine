@@ -1,5 +1,6 @@
 #include "first_app.hpp"
 
+#include "keyboard_movement_controller.hpp"
 #include "simple_render_system.hpp"
 #include "ve_camera.hpp"
 
@@ -12,6 +13,7 @@
 // std
 #include <array>
 #include <cassert>
+#include <chrono>
 #include <iostream>
 #include <stdexcept>
 
@@ -26,17 +28,36 @@ void FirstApp::run() {
     std::cout << "maxPushConstantsSize  = " << veDevice.properties.limits.maxPushConstantsSize
               << "\n";
 
+    // Initialize the render system.
     SimpleRenderSystem simpleRenderSystem{veDevice, veRenderer.getSwapChainRenderPass()};
-    VeCamera camera{};
-    // camera.setViewDirection(glm::vec3(0.f), glm::vec3(0.5f, 0.f, 1.f));
-    camera.setViewTarget(glm::vec3(-1.f, -2.f, 2.f), glm::vec3(0.f, 0.f, 2.5f));
 
+    // Initialize the camera and camera controller.
+    VeCamera camera{};
+    auto viewerObject = VeGameObject::createGameObject();
+    KeyboardMovementController cameraController{};
+
+    // Initialize the current time.
+    auto currentTime = std::chrono::high_resolution_clock::now();
+
+    // Start game loop.
     while (!veWindow.shouldClose()) {
+        // Poll events.
         glfwPollEvents();
+        if (glfwGetKey(veWindow.getGLFWWindow(), GLFW_KEY_ESCAPE) == GLFW_PRESS) break;
+
+        // Update delta time.
+        auto newTime = std::chrono::high_resolution_clock::now();
+        float frameTime =
+            std::chrono::duration<float, std::chrono::seconds::period>(newTime - currentTime)
+                .count();
+        currentTime = newTime;
+
+        // Move camera
+        cameraController.moveInPlaneXZ(veWindow.getGLFWWindow(), frameTime, viewerObject);
+        camera.setViewYXZ(viewerObject.transform.translation, viewerObject.transform.rotation);
 
         auto aspect = veRenderer.getAspectRatio();
-        // camera.setOrthographicProjection(-aspect, aspect, -1, 1, -1, 1);
-        camera.setPerspectiveProjection(glm::radians(50.f), aspect, .1, 10);
+        camera.setPerspectiveProjection(glm::radians(50.f), aspect, .1, 100);
 
         // beginFrame() will return a nullptr if swap chain needs to be recreated (window resized).
         if (auto commandBuffer = veRenderer.beginFrame()) {
@@ -115,7 +136,7 @@ void FirstApp::loadGameObjects() {
 
     auto cube = VeGameObject::createGameObject();
     cube.model = veModel;
-    cube.transform.translation = {0.f, 0.f, 2.5f};
+    cube.transform.translation = {0.f, 0.f, 3.5f};
     cube.transform.scale = {0.5f, 0.5f, 0.5f};
 
     gameObjects.push_back(std::move(cube));
