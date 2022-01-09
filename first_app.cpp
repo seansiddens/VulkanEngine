@@ -92,12 +92,12 @@ void FirstApp::run() {
 
 void FirstApp::loadGameObjects() {
     std::shared_ptr<VeModel> veModel =
-        VeModel::createModelFromFile(veDevice, "models/smooth_vase.obj");
+        VeModel::createModelFromFile(veDevice, "models/flat_vase.obj");
 
     auto gameObj = VeGameObject::createGameObject();
     gameObj.model = veModel;
-    gameObj.transform.translation = {0.f, 0.f, 3.5f};
-    gameObj.transform.scale = {2.5f, 2.5f, 2.5f};
+    gameObj.transform.translation = {0.f, 0.5f, 3.5f};
+    gameObj.transform.scale = {3.5f, 2.5f, 2.5f};
 
     gameObjects.push_back(std::move(gameObj));
 }

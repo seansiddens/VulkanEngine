@@ -20,7 +20,7 @@ namespace ve {
 // - vec3 and vec4 aligned by 4N ( = 16 bytes)
 struct SimplePushConstantData {
     glm::mat4 transform{1.0f};
-    alignas(16) glm::vec3 color;  // Align to 16 bytes.
+    glm::mat4 normalMatrix{1.f};
 };
 
 SimpleRenderSystem::SimpleRenderSystem(VeDevice& device, VkRenderPass renderPass)
@@ -72,8 +72,9 @@ void SimpleRenderSystem::renderGameObjects(VkCommandBuffer commandBuffer,
 
     for (auto& obj : gameObjects) {
         SimplePushConstantData push{};
-        push.color = obj.color;
-        push.transform = projectionView * obj.transform.mat4();
+        auto modelMatrix = obj.transform.mat4();
+        push.transform = projectionView * modelMatrix;
+        push.normalMatrix = obj.transform.normalMatrix();
 
         vkCmdPushConstants(commandBuffer, pipelineLayout,
                            VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0,
