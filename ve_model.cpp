@@ -33,52 +33,31 @@ VeModel::VeModel(VeDevice &veDevice, const VeModel::Builder &builder) : veDevice
     createIndexBuffers(builder.indices);
 }
 
-VeModel::~VeModel() {
-    // Clean up vertex buffer memory.
-    vkDestroyBuffer(veDevice.device(), vertexBuffer, nullptr);
-    vkFreeMemory(veDevice.device(), vertexBufferMemory, nullptr);
-
-    if (hasIndexBuffer) {
-        vkDestroyBuffer(veDevice.device(), indexBuffer, nullptr);
-        vkFreeMemory(veDevice.device(), indexBufferMemory, nullptr);
-    }
-}
+VeModel::~VeModel() {}
 
 void VeModel::createVertexBuffers(const std::vector<Vertex> &vertices) {
     vertexCount = static_cast<uint32_t>(vertices.size());
-    // Check that odel contains at least one triangle.
+    // Check that model contains at least one triangle.
     assert(vertexCount >= 3 && "Vertex count must be at least 3!");
 
     VkDeviceSize bufferSize = sizeof(vertices[0]) * vertexCount;
+    uint32_t vertexSize = sizeof(vertices[0]);
 
     // Create the staging buffer.
-    VkBuffer stagingBuffer;
-    VkDeviceMemory stagingBufferMemory;
-    veDevice.createBuffer(
-        bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer,
-        stagingBufferMemory);
+    VeBuffer stagingBuffer{
+        veDevice, vertexSize, vertexCount, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT};
+    // Write vertex data to the staging buffer.
+    stagingBuffer.map();
+    stagingBuffer.writeToBuffer((void *)vertices.data());
 
-    // Create a region of host memory that is directly mapped to device memory.
-    void *data;
-    vkMapMemory(veDevice.device(), stagingBufferMemory, 0, bufferSize, 0, &data);
-    // Copy vertex data to the host memory-mapped staging buffer. Since
-    // VK_MEMORY_PROPERTY_HOST_COHERENT_BIT is enabled, this data is automatically flushed to device
-    // memory.
-    memcpy(data, vertices.data(), static_cast<size_t>(bufferSize));
-    vkUnmapMemory(veDevice.device(), stagingBufferMemory);
+    // Create the vertex buffer.
+    vertexBuffer = std::make_unique<VeBuffer>(
+        veDevice, vertexSize, vertexCount,
+        VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
-    // Vertex buffer uses optimal device local memory.
-    veDevice.createBuffer(bufferSize,
-                          VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-                          VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, vertexBuffer, vertexBufferMemory);
-
-    // Copy vertex data from the staging buffer to the vertex buffer.
-    veDevice.copyBuffer(stagingBuffer, vertexBuffer, bufferSize);
-
-    // Clean-up the staging buffer since it is no longer needed.
-    vkDestroyBuffer(veDevice.device(), stagingBuffer, nullptr);
-    vkFreeMemory(veDevice.device(), stagingBufferMemory, nullptr);
+    veDevice.copyBuffer(stagingBuffer.getBuffer(), vertexBuffer->getBuffer(), bufferSize);
 }
 
 void VeModel::createIndexBuffers(const std::vector<uint32_t> &indices) {
@@ -90,35 +69,23 @@ void VeModel::createIndexBuffers(const std::vector<uint32_t> &indices) {
     }
 
     VkDeviceSize bufferSize = sizeof(indices[0]) * indexCount;
+    uint32_t indexSize = sizeof(indices[0]);
 
     // Create the staging buffer.
-    VkBuffer stagingBuffer;
-    VkDeviceMemory stagingBufferMemory;
-    veDevice.createBuffer(
-        bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer,
-        stagingBufferMemory);
+    VeBuffer stagingBuffer{
+        veDevice, indexSize, indexCount, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT};
+    // Write vertex data to the staging buffer.
+    stagingBuffer.map();
+    stagingBuffer.writeToBuffer((void *)indices.data());
 
-    // Create a region of host memory that is directly mapped to device memory.
-    void *data;
-    vkMapMemory(veDevice.device(), stagingBufferMemory, 0, bufferSize, 0, &data);
-    // Copy indice data to the host memory-mapped staging buffer. Since
-    // VK_MEMORY_PROPERTY_HOST_COHERENT_BIT is enabled, this data is automatically flushed to device
-    // memory.
-    memcpy(data, indices.data(), static_cast<size_t>(bufferSize));
-    vkUnmapMemory(veDevice.device(), stagingBufferMemory);
+    // Create the vertex buffer.
+    indexBuffer = std::make_unique<VeBuffer>(
+        veDevice, indexSize, indexCount,
+        VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
-    // Index buffer uses optimal device local memory.
-    veDevice.createBuffer(bufferSize,
-                          VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-                          VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, indexBuffer, indexBufferMemory);
-
-    // Copy indice data from the staging buffer to the index buffer.
-    veDevice.copyBuffer(stagingBuffer, indexBuffer, bufferSize);
-
-    // Clean-up the staging buffer since it is no longer needed.
-    vkDestroyBuffer(veDevice.device(), stagingBuffer, nullptr);
-    vkFreeMemory(veDevice.device(), stagingBufferMemory, nullptr);
+    veDevice.copyBuffer(stagingBuffer.getBuffer(), indexBuffer->getBuffer(), bufferSize);
 }
 
 std::unique_ptr<VeModel> VeModel::createModelFromFile(VeDevice &device,
@@ -140,12 +107,12 @@ void VeModel::draw(VkCommandBuffer commandBuffer) {
 }
 
 void VeModel::bind(VkCommandBuffer commandBuffer) {
-    VkBuffer buffers[] = {vertexBuffer};
+    VkBuffer buffers[] = {vertexBuffer->getBuffer()};
     VkDeviceSize offsets[] = {0};
     vkCmdBindVertexBuffers(commandBuffer, 0, 1, buffers, offsets);
 
     if (hasIndexBuffer) {
-        vkCmdBindIndexBuffer(commandBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+        vkCmdBindIndexBuffer(commandBuffer, indexBuffer->getBuffer(), 0, VK_INDEX_TYPE_UINT32);
     }
 }
 

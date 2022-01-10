@@ -3,6 +3,7 @@
 #include "movement_controller.hpp"
 #include "simple_render_system.hpp"
 #include "ve_camera.hpp"
+#include "ve_frame_info.hpp"
 
 // libs
 #define GLM_FORCE_RADIANS
@@ -19,23 +20,10 @@
 
 namespace ve {
 
-void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
-    MouseMovementController* mouseController =
-        static_cast<MouseMovementController*>(glfwGetWindowUserPointer(window));
-
-    if (mouseController->firstMouse) {
-        mouseController->lastX = xpos;
-        mouseController->lastY = ypos;
-        mouseController->firstMouse = false;
-    }
-
-    double xOffset = xpos - mouseController->lastX;
-    double yOffset = mouseController->lastY - ypos;
-    mouseController->lastX = xpos;
-    mouseController->lastY = ypos;
-
-    mouseController->updateObject(xOffset, yOffset);
-}
+struct GlobalUbo {
+    glm::mat4 projectionView{1.f};
+    glm::vec3 lightDirection = glm::normalize(glm::vec3{1.f, -3.f, -1.f});
+};
 
 FirstApp::FirstApp() { loadGameObjects(); }
 
@@ -45,6 +33,14 @@ void FirstApp::run() {
     // Check the maximum size of push constants available on the device.
     std::cout << "maxPushConstantsSize  = " << veDevice.properties.limits.maxPushConstantsSize
               << "\n";
+
+    VeBuffer globalUboBuffer{veDevice,
+                             sizeof(GlobalUbo),
+                             VeSwapChain::MAX_FRAMES_IN_FLIGHT,
+                             VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
+                             veDevice.properties.limits.minUniformBufferOffsetAlignment};
+    globalUboBuffer.map();
 
     // Initialize the render system.
     SimpleRenderSystem simpleRenderSystem{veDevice, veRenderer.getSwapChainRenderPass()};
@@ -79,8 +75,18 @@ void FirstApp::run() {
 
         // beginFrame() will return a nullptr if swap chain needs to be recreated (window resized).
         if (auto commandBuffer = veRenderer.beginFrame()) {
+            int frameIndex = veRenderer.getFrameIndex();
+            FrameInfo frameInfo{frameIndex, frameTime, commandBuffer, camera};
+
+            // update
+            GlobalUbo ubo{};
+            ubo.projectionView = camera.getProjection() * camera.getView();
+            globalUboBuffer.writeToIndex(&ubo, frameIndex);
+            globalUboBuffer.flushIndex(frameIndex);
+
+            // render
             veRenderer.beginSwapChainRenderPass(commandBuffer);
-            simpleRenderSystem.renderGameObjects(commandBuffer, gameObjects, camera);
+            simpleRenderSystem.renderGameObjects(frameInfo, gameObjects);
             veRenderer.endSwapChainRenderPass(commandBuffer);
             veRenderer.endFrame();
         }
@@ -91,15 +97,22 @@ void FirstApp::run() {
 }
 
 void FirstApp::loadGameObjects() {
-    std::shared_ptr<VeModel> veModel =
-        VeModel::createModelFromFile(veDevice, "models/flat_vase.obj");
+    std::shared_ptr<VeModel> smoothVaseModel =
+        VeModel::createModelFromFile(veDevice, "models/smooth_vase.obj");
+    std::shared_ptr<VeModel> cubeModel = VeModel::createModelFromFile(veDevice, "models/cube.obj");
 
-    auto gameObj = VeGameObject::createGameObject();
-    gameObj.model = veModel;
-    gameObj.transform.translation = {0.f, 0.5f, 3.5f};
-    gameObj.transform.scale = {3.5f, 2.5f, 2.5f};
+    auto vaseObj = VeGameObject::createGameObject();
+    vaseObj.model = smoothVaseModel;
+    vaseObj.transform.translation = {0.f, 0.f, 3.5f};
+    vaseObj.transform.scale = {2.0f, 2.0f, 2.0f};
 
-    gameObjects.push_back(std::move(gameObj));
+    auto cubeObj = VeGameObject::createGameObject();
+    cubeObj.model = cubeModel;
+    cubeObj.transform.translation = {0.f, 0.5f, 3.5f};
+    cubeObj.transform.scale = {0.5f, 0.5f, 0.5f};
+
+    gameObjects.push_back(std::move(vaseObj));
+    gameObjects.push_back(std::move(cubeObj));
 }
 
 }  // namespace ve

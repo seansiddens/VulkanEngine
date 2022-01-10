@@ -57,7 +57,6 @@ glm::mat3 TransformComponent::normalMatrix() {
                          inverseScale.z * (-s2),
                          inverseScale.z * (c1 * c2),
                      }};
-
 }
 
 }  // namespace ve

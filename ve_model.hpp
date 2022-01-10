@@ -1,5 +1,6 @@
 #pragma once
 
+#include "ve_buffer.hpp"
 #include "ve_device.hpp"
 
 // libs
@@ -57,13 +58,11 @@ class VeModel {
 
     VeDevice &veDevice;
 
-    VkBuffer vertexBuffer;
-    VkDeviceMemory vertexBufferMemory;
+    std::unique_ptr<VeBuffer> vertexBuffer;
     uint32_t vertexCount;
 
     bool hasIndexBuffer{false};
-    VkBuffer indexBuffer;
-    VkDeviceMemory indexBufferMemory;
+    std::unique_ptr<VeBuffer> indexBuffer;
     uint32_t indexCount;
 };
 
