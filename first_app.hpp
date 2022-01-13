@@ -4,6 +4,7 @@
 #include <memory>
 #include <vector>
 
+#include "ve_descriptors.hpp"
 #include "ve_device.hpp"
 #include "ve_game_object.hpp"
 #include "ve_renderer.hpp"
@@ -32,6 +33,7 @@ class FirstApp {
     VeDevice veDevice{veWindow};
     VeRenderer veRenderer{veWindow, veDevice};
 
+    std::unique_ptr<VeDescriptorPool> globalPool{};
     std::vector<VeGameObject> gameObjects;
 };
 

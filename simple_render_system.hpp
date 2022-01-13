@@ -14,7 +14,8 @@ namespace ve {
 
 class SimpleRenderSystem {
    public:
-    SimpleRenderSystem(VeDevice &device, VkRenderPass renderPass);
+    SimpleRenderSystem(VeDevice &device, VkRenderPass renderPass,
+                       VkDescriptorSetLayout globalSetLayout);
     ~SimpleRenderSystem();
 
     // Remove copy constructors.
@@ -24,7 +25,7 @@ class SimpleRenderSystem {
     void renderGameObjects(FrameInfo &frameInfo, std::vector<VeGameObject> &gameObjects);
 
    private:
-    void createPipelineLayout();
+    void createPipelineLayout(VkDescriptorSetLayout globalSetLayout);
     void createPipeline(VkRenderPass renderPass);
 
     VeDevice &veDevice;

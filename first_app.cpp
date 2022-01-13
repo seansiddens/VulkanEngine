@@ -22,28 +22,46 @@ namespace ve {
 
 struct GlobalUbo {
     glm::mat4 projectionView{1.f};
-    glm::vec3 lightDirection = glm::normalize(glm::vec3{1.f, -3.f, -1.f});
+    glm::vec3 lightDirection = glm::normalize(glm::vec3{1.f, -2.f, -3.f});
 };
 
-FirstApp::FirstApp() { loadGameObjects(); }
+FirstApp::FirstApp() {
+    globalPool =
+        VeDescriptorPool::Builder(veDevice)
+            .setMaxSets(VeSwapChain::MAX_FRAMES_IN_FLIGHT)
+            .addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VeSwapChain::MAX_FRAMES_IN_FLIGHT)
+            .build();
+
+    loadGameObjects();
+}
 
 FirstApp::~FirstApp() {}
 
 void FirstApp::run() {
-    // Check the maximum size of push constants available on the device.
-    std::cout << "maxPushConstantsSize  = " << veDevice.properties.limits.maxPushConstantsSize
-              << "\n";
+    std::vector<std::unique_ptr<VeBuffer>> uboBuffers(VeSwapChain::MAX_FRAMES_IN_FLIGHT);
+    for (int i = 0; i < uboBuffers.size(); i++) {
+        uboBuffers[i] = std::make_unique<VeBuffer>(veDevice, sizeof(GlobalUbo), 1,
+                                                   VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                                                   VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+        uboBuffers[i]->map();
+    }
 
-    VeBuffer globalUboBuffer{veDevice,
-                             sizeof(GlobalUbo),
-                             VeSwapChain::MAX_FRAMES_IN_FLIGHT,
-                             VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-                             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
-                             veDevice.properties.limits.minUniformBufferOffsetAlignment};
-    globalUboBuffer.map();
+    // Highest level set common to all of our shaders.
+    auto globalSetLayout =
+        VeDescriptorSetLayout::Builder(veDevice)
+            .addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT)
+            .build();
+
+    std::vector<VkDescriptorSet> globalDescriptorSets(VeSwapChain::MAX_FRAMES_IN_FLIGHT);
+    for (int i = 0; i < globalDescriptorSets.size(); i++) {
+        auto bufferInfo = uboBuffers[i]->descriptorInfo();
+        VeDescriptorWriter(*globalSetLayout, *globalPool)
+            .writeBuffer(0, &bufferInfo)
+            .build(globalDescriptorSets[i]);
+    }
 
     // Initialize the render system.
-    SimpleRenderSystem simpleRenderSystem{veDevice, veRenderer.getSwapChainRenderPass()};
+    SimpleRenderSystem simpleRenderSystem{veDevice, veRenderer.getSwapChainRenderPass(), globalSetLayout->getDescriptorSetLayout()};
 
     // Initialize the camera and camera controller.
     VeCamera camera{};
@@ -76,13 +94,13 @@ void FirstApp::run() {
         // beginFrame() will return a nullptr if swap chain needs to be recreated (window resized).
         if (auto commandBuffer = veRenderer.beginFrame()) {
             int frameIndex = veRenderer.getFrameIndex();
-            FrameInfo frameInfo{frameIndex, frameTime, commandBuffer, camera};
+            FrameInfo frameInfo{frameIndex, frameTime, commandBuffer, camera, globalDescriptorSets[frameIndex]};
 
             // update
             GlobalUbo ubo{};
             ubo.projectionView = camera.getProjection() * camera.getView();
-            globalUboBuffer.writeToIndex(&ubo, frameIndex);
-            globalUboBuffer.flushIndex(frameIndex);
+            uboBuffers[frameIndex]->writeToBuffer(&ubo);
+            uboBuffers[frameIndex]->flush();
 
             // render
             veRenderer.beginSwapChainRenderPass(commandBuffer);
