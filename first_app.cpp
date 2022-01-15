@@ -12,6 +12,8 @@
 #include <glm/gtc/constants.hpp>
 
 // std
+#include <math.h>
+
 #include <array>
 #include <cassert>
 #include <chrono>
@@ -61,22 +63,29 @@ void FirstApp::run() {
     }
 
     // Initialize the render system.
-    SimpleRenderSystem simpleRenderSystem{veDevice, veRenderer.getSwapChainRenderPass(), globalSetLayout->getDescriptorSetLayout()};
+    SimpleRenderSystem simpleRenderSystem{veDevice, veRenderer.getSwapChainRenderPass(),
+                                          globalSetLayout->getDescriptorSetLayout()};
 
     // Initialize the camera and camera controller.
     VeCamera camera{};
     auto viewerObject = VeGameObject::createGameObject();
+    viewerObject.transform.translation = glm::vec3{0.f, 0.f, -3.f};
+    // viewerObject.transform.rotation = glm::vec3{glm::pi<float>() * 0.125, 0.f, 0.f};
     KeyboardMovementController cameraController{};
+
+    glm::vec4 pivot{0.f, 0.f, 0.f, 1.f};
+    glm::vec4 cameraPos{0.f, 0.f, -3.f, 1.f};
+
+    double lastMouseX;
+    double lastMouseY;
+    glfwGetCursorPos(veWindow.getGLFWWindow(), &lastMouseX, &lastMouseY);
 
     // Initialize the current time.
     auto currentTime = std::chrono::high_resolution_clock::now();
+    bool mousePressed = false;
 
     // Start game loop.
     while (!veWindow.shouldClose()) {
-        // Poll events.
-        glfwPollEvents();
-        if (glfwGetKey(veWindow.getGLFWWindow(), GLFW_KEY_ESCAPE) == GLFW_PRESS) break;
-
         // Update delta time.
         auto newTime = std::chrono::high_resolution_clock::now();
         float frameTime =
@@ -84,9 +93,62 @@ void FirstApp::run() {
                 .count();
         currentTime = newTime;
 
+        glm::vec3 forwardDir = glm::normalize(pivot - cameraPos);
+
+        // Poll events.
+        glfwPollEvents();
+        if (glfwGetKey(veWindow.getGLFWWindow(), GLFW_KEY_ESCAPE) == GLFW_PRESS) break;
+        if (glfwGetMouseButton(veWindow.getGLFWWindow(), GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
+            mousePressed = true;
+        } else {
+            mousePressed = false;
+        }
+
+        const float zoomSpeed = 2.5f;
+        if (glfwGetKey(veWindow.getGLFWWindow(), GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
+            cameraPos += glm::vec4(zoomSpeed * frameTime * forwardDir, 0.f);
+        }
+        if (glfwGetKey(veWindow.getGLFWWindow(), GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) {
+            cameraPos -= glm::vec4(zoomSpeed * frameTime * forwardDir, 0.f);
+        }
+
+        // A movement from left to right = 2 * PI = 360 deg
+        float deltaAngleX = (2.f * M_PI / static_cast<float>(veWindow.getExtent().width));
+        // A movement from top to bottom = PI = 180 deg.
+        float deltaAngleY = (M_PI / static_cast<float>(veWindow.getExtent().height));
+
+        double currMouseX, currMouseY;
+        glfwGetCursorPos(veWindow.getGLFWWindow(), &currMouseX, &currMouseY);
+
+        float xAngle = (lastMouseX - currMouseX) * deltaAngleX;
+        float yAngle = (lastMouseY - currMouseY) * deltaAngleY;
+
+        // Extra step to handle the problem when the camera direction is the same as the up vector
+        // float cosAngle = glm::dot(-glm::vec3(glm::transpose(viewerObject.transform.mat4())[0]),
+        //                           glm::vec3{0.f, -1.f, 0.f});
+
+        if (mousePressed) {
+            // Rotate camera object around pivot point about the Y axis.
+            glm::mat4 rotMatrixX(1.f);
+            rotMatrixX = glm::rotate(rotMatrixX, xAngle, glm::vec3{0.f, -1.f, 0.f});
+            cameraPos = (rotMatrixX * (cameraPos - pivot)) + pivot;
+
+            // Rotate camera around pivot about the camera object's right dir.
+            glm::mat4 rotationMatrixY(1.0f);
+            rotationMatrixY = glm::rotate(rotationMatrixY, yAngle,
+                                          glm::vec3(glm::transpose(camera.getView())[0]));
+            glm::vec3 finalPosition = (rotationMatrixY * (cameraPos - pivot)) + pivot;
+            cameraPos = glm::vec4(finalPosition, 1.f);
+        }
+
+        lastMouseX = currMouseX;
+        lastMouseY = currMouseY;
+
         // Move camera
-        cameraController.moveInPlaneXZ(veWindow.getGLFWWindow(), frameTime, viewerObject);
-        camera.setViewYXZ(viewerObject.transform.translation, viewerObject.transform.rotation);
+        // cameraController.moveInPlaneXZ(veWindow.getGLFWWindow(), frameTime, viewerObject);
+        // camera.setViewYXZ(viewerObject.transform.translation, viewerObject.transform.rotation);
+
+        camera.setViewTarget(cameraPos, pivot);
 
         auto aspect = veRenderer.getAspectRatio();
         camera.setPerspectiveProjection(glm::radians(50.f), aspect, .1, 100);
@@ -94,7 +156,8 @@ void FirstApp::run() {
         // beginFrame() will return a nullptr if swap chain needs to be recreated (window resized).
         if (auto commandBuffer = veRenderer.beginFrame()) {
             int frameIndex = veRenderer.getFrameIndex();
-            FrameInfo frameInfo{frameIndex, frameTime, commandBuffer, camera, globalDescriptorSets[frameIndex]};
+            FrameInfo frameInfo{frameIndex, frameTime, commandBuffer, camera,
+                                globalDescriptorSets[frameIndex]};
 
             // update
             GlobalUbo ubo{};
@@ -121,12 +184,12 @@ void FirstApp::loadGameObjects() {
 
     auto vaseObj = VeGameObject::createGameObject();
     vaseObj.model = smoothVaseModel;
-    vaseObj.transform.translation = {0.f, 0.f, 3.5f};
-    vaseObj.transform.scale = {2.0f, 2.0f, 2.0f};
+    vaseObj.transform.translation = {0.f, 0.f, 0.f};
+    vaseObj.transform.scale = {2.5f, 2.0f, 2.0f};
 
     auto cubeObj = VeGameObject::createGameObject();
     cubeObj.model = cubeModel;
-    cubeObj.transform.translation = {0.f, 0.5f, 3.5f};
+    cubeObj.transform.translation = {0.f, 0.5f, 0.f};
     cubeObj.transform.scale = {0.5f, 0.5f, 0.5f};
 
     gameObjects.push_back(std::move(vaseObj));

@@ -1,5 +1,7 @@
 #include "ve_camera.hpp"
 
+#include <glm/ext/matrix_transform.hpp>
+
 #include <cassert>
 #include <limits>
 

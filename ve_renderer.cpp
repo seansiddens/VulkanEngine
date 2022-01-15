@@ -43,7 +43,7 @@ void VeRenderer::endFrame() {
     // End command buffer.
     auto commandBuffer = getCurrentCommandBuffer();
     if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {
-        throw std::runtime_error("failed to record command buffer!");
+        throw std::runtime_error("failed to end command buffer!");
     }
 
     // Submit command buffer to begin execution on GPU.
