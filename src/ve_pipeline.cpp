@@ -16,8 +16,10 @@
 
 namespace ve {
 
-VePipeline::VePipeline(VeDevice& device, const std::string& vertFilepath,
-                       const std::string& fragFilepath, const PipelineConfigInfo& configInfo)
+VePipeline::VePipeline(VeDevice& device,
+                       const std::string& vertFilepath,
+                       const std::string& fragFilepath,
+                       const PipelineConfigInfo& configInfo)
     : veDevice{device} {
     createGraphicsPipeline(vertFilepath, fragFilepath, configInfo);
 }
@@ -204,8 +206,9 @@ void VePipeline::createGraphicsPipeline(const std::string& vertFilepath,
     pipelineInfo.basePipelineIndex = -1;
     pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
 
-    if (vkCreateGraphicsPipelines(veDevice.device(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr,
-                                  &graphicsPipeline) != VK_SUCCESS) {
+    if (vkCreateGraphicsPipelines(
+            veDevice.device(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &graphicsPipeline) !=
+        VK_SUCCESS) {
         throw std::runtime_error("failed to create graphics pipeline");
     }
 }

@@ -9,7 +9,9 @@ namespace ve {
 // *************** Descriptor Set Layout Builder *********************
 
 VeDescriptorSetLayout::Builder &VeDescriptorSetLayout::Builder::addBinding(
-    uint32_t binding, VkDescriptorType descriptorType, VkShaderStageFlags stageFlags,
+    uint32_t binding,
+    VkDescriptorType descriptorType,
+    VkShaderStageFlags stageFlags,
     uint32_t count) {
     assert(bindings.count(binding) == 0 && "Binding already in use");
     VkDescriptorSetLayoutBinding layoutBinding{};
@@ -40,8 +42,9 @@ VeDescriptorSetLayout::VeDescriptorSetLayout(
     descriptorSetLayoutInfo.bindingCount = static_cast<uint32_t>(setLayoutBindings.size());
     descriptorSetLayoutInfo.pBindings = setLayoutBindings.data();
 
-    if (vkCreateDescriptorSetLayout(veDevice.device(), &descriptorSetLayoutInfo, nullptr,
-                                    &descriptorSetLayout) != VK_SUCCESS) {
+    if (vkCreateDescriptorSetLayout(
+            veDevice.device(), &descriptorSetLayoutInfo, nullptr, &descriptorSetLayout) !=
+        VK_SUCCESS) {
         throw std::runtime_error("failed to create descriptor set layout!");
     }
 }
@@ -74,7 +77,8 @@ std::unique_ptr<VeDescriptorPool> VeDescriptorPool::Builder::build() const {
 
 // *************** Descriptor Pool *********************
 
-VeDescriptorPool::VeDescriptorPool(VeDevice &veDevice, uint32_t maxSets,
+VeDescriptorPool::VeDescriptorPool(VeDevice &veDevice,
+                                   uint32_t maxSets,
                                    VkDescriptorPoolCreateFlags poolFlags,
                                    const std::vector<VkDescriptorPoolSize> &poolSizes)
     : veDevice{veDevice} {
@@ -112,8 +116,10 @@ bool VeDescriptorPool::allocateDescriptor(const VkDescriptorSetLayout descriptor
 }
 
 void VeDescriptorPool::freeDescriptors(std::vector<VkDescriptorSet> &descriptors) const {
-    vkFreeDescriptorSets(veDevice.device(), descriptorPool,
-                         static_cast<uint32_t>(descriptors.size()), descriptors.data());
+    vkFreeDescriptorSets(veDevice.device(),
+                         descriptorPool,
+                         static_cast<uint32_t>(descriptors.size()),
+                         descriptors.data());
 }
 
 void VeDescriptorPool::resetPool() { vkResetDescriptorPool(veDevice.device(), descriptorPool, 0); }

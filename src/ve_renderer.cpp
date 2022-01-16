@@ -121,8 +121,10 @@ void VeRenderer::createCommandBuffers() {
 }
 
 void VeRenderer::freeCommandBuffers() {
-    vkFreeCommandBuffers(veDevice.device(), veDevice.getCommandPool(),
-                         static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
+    vkFreeCommandBuffers(veDevice.device(),
+                         veDevice.getCommandPool(),
+                         static_cast<uint32_t>(commandBuffers.size()),
+                         commandBuffers.data());
     commandBuffers.clear();
 }
 

@@ -6,8 +6,11 @@ namespace ve {
 
 class VeBuffer {
    public:
-    VeBuffer(VeDevice& device, VkDeviceSize instanceSize, uint32_t instanceCount,
-             VkBufferUsageFlags usageFlags, VkMemoryPropertyFlags memoryPropertyFlags,
+    VeBuffer(VeDevice& device,
+             VkDeviceSize instanceSize,
+             uint32_t instanceCount,
+             VkBufferUsageFlags usageFlags,
+             VkMemoryPropertyFlags memoryPropertyFlags,
              VkDeviceSize minOffsetAlignment = 1);
     ~VeBuffer();
 

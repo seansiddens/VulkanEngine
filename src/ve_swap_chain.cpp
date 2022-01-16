@@ -16,7 +16,8 @@ VeSwapChain::VeSwapChain(VeDevice &deviceRef, VkExtent2D extent)
     init();
 }
 
-VeSwapChain::VeSwapChain(VeDevice &deviceRef, VkExtent2D extent,
+VeSwapChain::VeSwapChain(VeDevice &deviceRef,
+                         VkExtent2D extent,
                          std::shared_ptr<VeSwapChain> previous)
     : veDevice{deviceRef}, windowExtent{extent}, oldSwapChain{previous} {
     init();
@@ -68,14 +69,20 @@ VeSwapChain::~VeSwapChain() {
 }
 // Fetches the index of the frame we should render to next. Handles CPU and GPU synchronization.
 VkResult VeSwapChain::acquireNextImage(uint32_t *imageIndex) {
-    vkWaitForFences(veDevice.device(), 1, &inFlightFences[currentFrame], VK_TRUE,
+    vkWaitForFences(veDevice.device(),
+                    1,
+                    &inFlightFences[currentFrame],
+                    VK_TRUE,
                     std::numeric_limits<uint64_t>::max());
 
     VkResult result =
-        vkAcquireNextImageKHR(veDevice.device(), swapChain, std::numeric_limits<uint64_t>::max(),
+        vkAcquireNextImageKHR(veDevice.device(),
+                              swapChain,
+                              std::numeric_limits<uint64_t>::max(),
                               imageAvailableSemaphores[currentFrame],  // must be a not signaled
                                                                        // semaphore
-                              VK_NULL_HANDLE, imageIndex);
+                              VK_NULL_HANDLE,
+                              imageIndex);
 
     return result;
 }
@@ -288,8 +295,9 @@ void VeSwapChain::createFramebuffers() {
         framebufferInfo.height = swapChainExtent.height;
         framebufferInfo.layers = 1;
 
-        if (vkCreateFramebuffer(veDevice.device(), &framebufferInfo, nullptr,
-                                &swapChainFramebuffers[i]) != VK_SUCCESS) {
+        if (vkCreateFramebuffer(
+                veDevice.device(), &framebufferInfo, nullptr, &swapChainFramebuffers[i]) !=
+            VK_SUCCESS) {
             throw std::runtime_error("failed to create framebuffer!");
         }
     }
@@ -321,8 +329,8 @@ void VeSwapChain::createDepthResources() {
         imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
         imageInfo.flags = 0;
 
-        veDevice.createImageWithInfo(imageInfo, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depthImages[i],
-                                     depthImageMemorys[i]);
+        veDevice.createImageWithInfo(
+            imageInfo, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depthImages[i], depthImageMemorys[i]);
 
         VkImageViewCreateInfo viewInfo{};
         viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -356,10 +364,12 @@ void VeSwapChain::createSyncObjects() {
     fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-        if (vkCreateSemaphore(veDevice.device(), &semaphoreInfo, nullptr,
-                              &imageAvailableSemaphores[i]) != VK_SUCCESS ||
-            vkCreateSemaphore(veDevice.device(), &semaphoreInfo, nullptr,
-                              &renderFinishedSemaphores[i]) != VK_SUCCESS ||
+        if (vkCreateSemaphore(
+                veDevice.device(), &semaphoreInfo, nullptr, &imageAvailableSemaphores[i]) !=
+                VK_SUCCESS ||
+            vkCreateSemaphore(
+                veDevice.device(), &semaphoreInfo, nullptr, &renderFinishedSemaphores[i]) !=
+                VK_SUCCESS ||
             vkCreateFence(veDevice.device(), &fenceInfo, nullptr, &inFlightFences[i]) !=
                 VK_SUCCESS) {
             throw std::runtime_error("failed to create synchronization objects for a frame!");
@@ -421,7 +431,8 @@ VkExtent2D VeSwapChain::chooseSwapExtent(const VkSurfaceCapabilitiesKHR &capabil
 VkFormat VeSwapChain::findDepthFormat() {
     return veDevice.findSupportedFormat(
         {VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT},
-        VK_IMAGE_TILING_OPTIMAL, VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
+        VK_IMAGE_TILING_OPTIMAL,
+        VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
 }
 
 }  // namespace ve

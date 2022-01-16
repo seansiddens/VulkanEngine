@@ -51,7 +51,10 @@ void VeModel::createVertexBuffers(const std::vector<Vertex> &vertices) {
 
     // Create the staging buffer.
     VeBuffer stagingBuffer{
-        veDevice, vertexSize, vertexCount, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+        veDevice,
+        vertexSize,
+        vertexCount,
+        VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT};
     // Write vertex data to the staging buffer.
     stagingBuffer.map();
@@ -59,7 +62,9 @@ void VeModel::createVertexBuffers(const std::vector<Vertex> &vertices) {
 
     // Create the vertex buffer.
     vertexBuffer = std::make_unique<VeBuffer>(
-        veDevice, vertexSize, vertexCount,
+        veDevice,
+        vertexSize,
+        vertexCount,
         VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
@@ -79,7 +84,10 @@ void VeModel::createIndexBuffers(const std::vector<uint32_t> &indices) {
 
     // Create the staging buffer.
     VeBuffer stagingBuffer{
-        veDevice, indexSize, indexCount, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+        veDevice,
+        indexSize,
+        indexCount,
+        VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT};
     // Write vertex data to the staging buffer.
     stagingBuffer.map();
@@ -87,7 +95,9 @@ void VeModel::createIndexBuffers(const std::vector<uint32_t> &indices) {
 
     // Create the vertex buffer.
     indexBuffer = std::make_unique<VeBuffer>(
-        veDevice, indexSize, indexCount,
+        veDevice,
+        indexSize,
+        indexCount,
         VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 

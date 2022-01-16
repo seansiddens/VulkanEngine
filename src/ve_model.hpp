@@ -12,7 +12,6 @@
 #include <memory>
 #include <vector>
 
-
 namespace ve {
 
 class VeModel {

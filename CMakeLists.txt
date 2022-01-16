@@ -142,6 +142,8 @@ foreach(GLSL ${GLSL_SOURCE_FILES})
   list(APPEND SPIRV_BINARY_FILES ${SPIRV})
 endforeach(GLSL)
 
+set(Format COMMAND clang-format -i src/* -style=file)
+
 add_custom_target(
     Shaders
     DEPENDS ${SPIRV_BINARY_FILES}

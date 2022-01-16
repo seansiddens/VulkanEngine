@@ -14,7 +14,8 @@ class VeSwapChain {
     static constexpr int MAX_FRAMES_IN_FLIGHT = 2;
 
     VeSwapChain(VeDevice &deviceRef, VkExtent2D windowExtent);
-    VeSwapChain(VeDevice &deviceRef, VkExtent2D windowExtent,
+    VeSwapChain(VeDevice &deviceRef,
+                VkExtent2D windowExtent,
                 std::shared_ptr<VeSwapChain> previous);
     ~VeSwapChain();
 

@@ -26,7 +26,8 @@
 namespace ve {
 
 struct GlobalUbo {
-    glm::mat4 projectionView{1.f};
+    glm::mat4 projection{1.f};
+    glm::mat4 view{1.f};
     glm::vec4 ambientLightColor{1.f, 1.f, 1.f, .01f};  // w is light intensity
     glm::vec3 lightPosition{-2.f, -3.f, 0.5};
     alignas(16) glm::vec4 lightColor{1.f};  // w is light intensity
@@ -47,7 +48,9 @@ FirstApp::~FirstApp() {}
 void FirstApp::run() {
     std::vector<std::unique_ptr<VeBuffer>> uboBuffers(VeSwapChain::MAX_FRAMES_IN_FLIGHT);
     for (int i = 0; i < uboBuffers.size(); i++) {
-        uboBuffers[i] = std::make_unique<VeBuffer>(veDevice, sizeof(GlobalUbo), 1,
+        uboBuffers[i] = std::make_unique<VeBuffer>(veDevice,
+                                                   sizeof(GlobalUbo),
+                                                   1,
                                                    VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
                                                    VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
         uboBuffers[i]->map();
@@ -68,8 +71,8 @@ void FirstApp::run() {
     }
 
     // Initialize the render system.
-    SimpleRenderSystem simpleRenderSystem{veDevice, veRenderer.getSwapChainRenderPass(),
-                                          globalSetLayout->getDescriptorSetLayout()};
+    SimpleRenderSystem simpleRenderSystem{
+        veDevice, veRenderer.getSwapChainRenderPass(), globalSetLayout->getDescriptorSetLayout()};
 
     // Initialize the camera and camera controller.
     VeCamera camera{};
@@ -140,8 +143,8 @@ void FirstApp::run() {
 
             // Rotate camera around pivot about the camera object's right dir.
             glm::mat4 rotationMatrixY(1.0f);
-            rotationMatrixY = glm::rotate(rotationMatrixY, yAngle,
-                                          glm::vec3(glm::transpose(camera.getView())[0]));
+            rotationMatrixY = glm::rotate(
+                rotationMatrixY, yAngle, glm::vec3(glm::transpose(camera.getView())[0]));
             glm::vec3 finalPosition = (rotationMatrixY * (cameraPos - pivot)) + pivot;
             cameraPos = glm::vec4(finalPosition, 1.f);
         }
@@ -161,12 +164,18 @@ void FirstApp::run() {
         // beginFrame() will return a nullptr if swap chain needs to be recreated (window resized).
         if (auto commandBuffer = veRenderer.beginFrame()) {
             int frameIndex = veRenderer.getFrameIndex();
-            FrameInfo frameInfo{frameIndex, frameTime, commandBuffer, camera,
-                                globalDescriptorSets[frameIndex], gameObjects};
+            FrameInfo frameInfo{frameIndex,
+                                frameTime,
+                                commandBuffer,
+                                camera,
+                                globalDescriptorSets[frameIndex],
+                                gameObjects};
 
             // update
+            //  Set up ubo
             GlobalUbo ubo{};
-            ubo.projectionView = camera.getProjection() * camera.getView();
+            ubo.projection = camera.getProjection();
+            ubo.view = camera.getView();
             uboBuffers[frameIndex]->writeToBuffer(&ubo);
             uboBuffers[frameIndex]->flush();
 

@@ -29,8 +29,11 @@ VkDeviceSize VeBuffer::getAlignment(VkDeviceSize instanceSize, VkDeviceSize minO
     return instanceSize;
 }
 
-VeBuffer::VeBuffer(VeDevice &device, VkDeviceSize instanceSize, uint32_t instanceCount,
-                   VkBufferUsageFlags usageFlags, VkMemoryPropertyFlags memoryPropertyFlags,
+VeBuffer::VeBuffer(VeDevice &device,
+                   VkDeviceSize instanceSize,
+                   uint32_t instanceCount,
+                   VkBufferUsageFlags usageFlags,
+                   VkMemoryPropertyFlags memoryPropertyFlags,
                    VkDeviceSize minOffsetAlignment)
     : veDevice{device},
       instanceSize{instanceSize},

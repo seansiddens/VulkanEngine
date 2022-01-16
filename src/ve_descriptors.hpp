@@ -15,8 +15,10 @@ class VeDescriptorSetLayout {
        public:
         Builder(VeDevice &veDevice) : veDevice{veDevice} {}
 
-        Builder &addBinding(uint32_t binding, VkDescriptorType descriptorType,
-                            VkShaderStageFlags stageFlags, uint32_t count = 1);
+        Builder &addBinding(uint32_t binding,
+                            VkDescriptorType descriptorType,
+                            VkShaderStageFlags stageFlags,
+                            uint32_t count = 1);
         std::unique_ptr<VeDescriptorSetLayout> build() const;
 
        private:
@@ -58,7 +60,9 @@ class VeDescriptorPool {
         VkDescriptorPoolCreateFlags poolFlags = 0;
     };
 
-    VeDescriptorPool(VeDevice &veDevice, uint32_t maxSets, VkDescriptorPoolCreateFlags poolFlags,
+    VeDescriptorPool(VeDevice &veDevice,
+                     uint32_t maxSets,
+                     VkDescriptorPoolCreateFlags poolFlags,
                      const std::vector<VkDescriptorPoolSize> &poolSizes);
     ~VeDescriptorPool();
     VeDescriptorPool(const VeDescriptorPool &) = delete;
