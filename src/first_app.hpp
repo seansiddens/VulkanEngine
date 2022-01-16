@@ -34,7 +34,7 @@ class FirstApp {
     VeRenderer veRenderer{veWindow, veDevice};
 
     std::unique_ptr<VeDescriptorPool> globalPool{};
-    std::vector<VeGameObject> gameObjects;
+    VeGameObject::Map gameObjects;
 };
 
 }  // namespace ve

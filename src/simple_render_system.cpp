@@ -65,8 +65,7 @@ void SimpleRenderSystem::createPipeline(VkRenderPass renderPass) {
                                               "shaders/simple_shader.frag.spv", pipelineConfig);
 }
 
-void SimpleRenderSystem::renderGameObjects(FrameInfo& frameInfo,
-                                           std::vector<VeGameObject>& gameObjects) {
+void SimpleRenderSystem::renderGameObjects(FrameInfo& frameInfo) {
     // Bind the pipeline.
     vePipeline->bind(frameInfo.commandBuffer);
 
@@ -75,7 +74,8 @@ void SimpleRenderSystem::renderGameObjects(FrameInfo& frameInfo,
                             pipelineLayout, 0, 1, &frameInfo.globalDescriptorSet, 0, nullptr);
 
     // Render each game object.
-    for (auto& obj : gameObjects) {
+    for (auto& kv : frameInfo.gameObjects) {
+        auto &obj = kv.second;
         SimplePushConstantData push{};
         push.modelMatrix = obj.transform.mat4();
         push.normalMatrix = obj.transform.normalMatrix();

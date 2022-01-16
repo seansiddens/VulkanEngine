@@ -20,13 +20,16 @@
 #include <iostream>
 #include <stdexcept>
 
+// TODO: Fix gimbal-lock in arcball cam.
+// TODO: Prevent arcball zoom into pivot position (will cause runtime-error).
+
 namespace ve {
 
 struct GlobalUbo {
     glm::mat4 projectionView{1.f};
-    glm::vec4 ambientLightColor{1.f, 1.f, 1.f, .02f}; // w is light intensity
-    glm::vec3 lightPosition{-1.f};
-    alignas(16) glm::vec4 lightColor{1.f}; // w is light intensity
+    glm::vec4 ambientLightColor{1.f, 1.f, 1.f, .01f};  // w is light intensity
+    glm::vec3 lightPosition{-2.f, -3.f, 0.5};
+    alignas(16) glm::vec4 lightColor{1.f};  // w is light intensity
 };
 
 FirstApp::FirstApp() {
@@ -53,7 +56,7 @@ void FirstApp::run() {
     // Highest level set common to all of our shaders.
     auto globalSetLayout =
         VeDescriptorSetLayout::Builder(veDevice)
-            .addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT)
+            .addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS)
             .build();
 
     std::vector<VkDescriptorSet> globalDescriptorSets(VeSwapChain::MAX_FRAMES_IN_FLIGHT);
@@ -159,7 +162,7 @@ void FirstApp::run() {
         if (auto commandBuffer = veRenderer.beginFrame()) {
             int frameIndex = veRenderer.getFrameIndex();
             FrameInfo frameInfo{frameIndex, frameTime, commandBuffer, camera,
-                                globalDescriptorSets[frameIndex]};
+                                globalDescriptorSets[frameIndex], gameObjects};
 
             // update
             GlobalUbo ubo{};
@@ -169,7 +172,7 @@ void FirstApp::run() {
 
             // render
             veRenderer.beginSwapChainRenderPass(commandBuffer);
-            simpleRenderSystem.renderGameObjects(frameInfo, gameObjects);
+            simpleRenderSystem.renderGameObjects(frameInfo);
             veRenderer.endSwapChainRenderPass(commandBuffer);
             veRenderer.endFrame();
         }
@@ -180,28 +183,27 @@ void FirstApp::run() {
 }
 
 void FirstApp::loadGameObjects() {
-
     std::shared_ptr<VeModel> smoothVaseModel =
         VeModel::createModelFromFile(veDevice, "models/smooth_vase.obj");
     auto vaseObj = VeGameObject::createGameObject();
     vaseObj.model = smoothVaseModel;
     vaseObj.transform.translation = {0.f, -1.0f, 0.f};
     vaseObj.transform.scale = {2.5f, 2.0f, 2.0f};
-    gameObjects.push_back(std::move(vaseObj));
+    gameObjects.emplace(vaseObj.getId(), std::move(vaseObj));
 
     std::shared_ptr<VeModel> cubeModel = VeModel::createModelFromFile(veDevice, "models/cube.obj");
     auto cubeObj = VeGameObject::createGameObject();
     cubeObj.model = cubeModel;
     cubeObj.transform.translation = {0.f, -0.5f, 0.f};
     cubeObj.transform.scale = {0.5f, 0.5f, 0.5f};
-    gameObjects.push_back(std::move(cubeObj));
+    gameObjects.emplace(cubeObj.getId(), std::move(cubeObj));
 
     std::shared_ptr<VeModel> quadModel = VeModel::createModelFromFile(veDevice, "models/quad.obj");
     auto floorObj = VeGameObject::createGameObject();
     floorObj.model = quadModel;
-    floorObj.transform.translation = {0.f, 0.f, 0.f};
+    floorObj.transform.translation = {0.f, 0.01f, 0.f};
     floorObj.transform.scale = {5.f, 1.f, 5.f};
-    gameObjects.push_back(std::move(floorObj));
+    gameObjects.emplace(floorObj.getId(), std::move(floorObj));
 }
 
 }  // namespace ve
