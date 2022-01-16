@@ -24,7 +24,9 @@ namespace ve {
 
 struct GlobalUbo {
     glm::mat4 projectionView{1.f};
-    glm::vec3 lightDirection = glm::normalize(glm::vec3{1.f, -2.f, -3.f});
+    glm::vec4 ambientLightColor{1.f, 1.f, 1.f, .02f}; // w is light intensity
+    glm::vec3 lightPosition{-1.f};
+    alignas(16) glm::vec4 lightColor{1.f}; // w is light intensity
 };
 
 FirstApp::FirstApp() {
@@ -69,12 +71,12 @@ void FirstApp::run() {
     // Initialize the camera and camera controller.
     VeCamera camera{};
     auto viewerObject = VeGameObject::createGameObject();
-    viewerObject.transform.translation = glm::vec3{0.f, 0.f, -3.f};
+    viewerObject.transform.translation = glm::vec3{0.f, 99.f, -3.f};
     // viewerObject.transform.rotation = glm::vec3{glm::pi<float>() * 0.125, 0.f, 0.f};
     KeyboardMovementController cameraController{};
 
-    glm::vec4 pivot{0.f, 0.f, 0.f, 1.f};
-    glm::vec4 cameraPos{0.f, 0.f, -3.f, 1.f};
+    glm::vec4 pivot{0.f, -1.0f, 0.f, 1.f};
+    glm::vec4 cameraPos{0.f, -1.f, -3.f, 1.f};
 
     double lastMouseX;
     double lastMouseY;
@@ -178,22 +180,28 @@ void FirstApp::run() {
 }
 
 void FirstApp::loadGameObjects() {
+
     std::shared_ptr<VeModel> smoothVaseModel =
         VeModel::createModelFromFile(veDevice, "models/smooth_vase.obj");
-    std::shared_ptr<VeModel> cubeModel = VeModel::createModelFromFile(veDevice, "models/cube.obj");
-
     auto vaseObj = VeGameObject::createGameObject();
     vaseObj.model = smoothVaseModel;
-    vaseObj.transform.translation = {0.f, 0.f, 0.f};
+    vaseObj.transform.translation = {0.f, -1.0f, 0.f};
     vaseObj.transform.scale = {2.5f, 2.0f, 2.0f};
+    gameObjects.push_back(std::move(vaseObj));
 
+    std::shared_ptr<VeModel> cubeModel = VeModel::createModelFromFile(veDevice, "models/cube.obj");
     auto cubeObj = VeGameObject::createGameObject();
     cubeObj.model = cubeModel;
-    cubeObj.transform.translation = {0.f, 0.5f, 0.f};
+    cubeObj.transform.translation = {0.f, -0.5f, 0.f};
     cubeObj.transform.scale = {0.5f, 0.5f, 0.5f};
-
-    gameObjects.push_back(std::move(vaseObj));
     gameObjects.push_back(std::move(cubeObj));
+
+    std::shared_ptr<VeModel> quadModel = VeModel::createModelFromFile(veDevice, "models/quad.obj");
+    auto floorObj = VeGameObject::createGameObject();
+    floorObj.model = quadModel;
+    floorObj.transform.translation = {0.f, 0.f, 0.f};
+    floorObj.transform.scale = {5.f, 1.f, 5.f};
+    gameObjects.push_back(std::move(floorObj));
 }
 
 }  // namespace ve
