@@ -14,6 +14,12 @@
 #include <iostream>
 #include <unordered_map>
 
+// Pathing is done from the build directory, so we define a macro to orient us automatically
+// in the project root directory.
+#ifndef ENGINE_DIR
+#define ENGINE_DIR "../"
+#endif
+
 namespace std {
 template <>
 struct hash<ve::VeModel::Vertex> {
@@ -93,7 +99,7 @@ std::unique_ptr<VeModel> VeModel::createModelFromFile(VeDevice &device,
     Builder builder{};
     builder.loadModel(filepath);
 
-    std::cout << "Size: " << builder.vertices.size() << '\n';
+    // std::cout << "Model size: " << builder.vertices.size() << '\n';
 
     return std::make_unique<VeModel>(device, builder);
 }
@@ -135,12 +141,13 @@ std::vector<VkVertexInputAttributeDescription> VeModel::Vertex::getAttributeDesc
 }
 
 void VeModel::Builder::loadModel(const std::string &filepath) {
+    std::string enginePath = ENGINE_DIR + filepath;
     tinyobj::attrib_t attrib;
     std::vector<tinyobj::shape_t> shapes;
     std::vector<tinyobj::material_t> materials;
     std::string warn, err;
 
-    if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, filepath.c_str())) {
+    if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, enginePath.c_str())) {
         // Loading model failed.
         throw std::runtime_error(warn + err);
     }

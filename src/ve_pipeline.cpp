@@ -8,6 +8,12 @@
 #include <iostream>
 #include <stdexcept>
 
+// Pathing is done from the build directory, so we define a macro to orient us automatically
+// in the project root directory.
+#ifndef ENGINE_DIR
+#define ENGINE_DIR "../"
+#endif
+
 namespace ve {
 
 VePipeline::VePipeline(VeDevice& device, const std::string& vertFilepath,
@@ -111,12 +117,13 @@ void VePipeline::defaultPipelineConfigInfo(PipelineConfigInfo& configInfo) {
 }
 
 std::vector<char> VePipeline::readFile(const std::string& filepath) {
+    std::string enginePath = ENGINE_DIR + filepath;
     // Open file and seek to end of filestream.
-    std::ifstream file(filepath, std::ios::ate | std::ios::binary);
+    std::ifstream file(enginePath, std::ios::ate | std::ios::binary);
 
     // Throw exception if we failed to open the file.
     if (!file.is_open()) {
-        throw std::runtime_error("Failed to open file: " + filepath);
+        throw std::runtime_error("Failed to open file: " + enginePath);
     }
 
     // Get size of file.
