@@ -198,7 +198,7 @@ void VeDevice::createCommandPool() {
     }
 }
 
-//
+// Creates the surface which we present images to.
 void VeDevice::createSurface() { veWindow.createWindowSurface(instance, &surface_); }
 
 bool VeDevice::isDeviceSuitable(VkPhysicalDevice device) {
@@ -527,6 +527,63 @@ void VeDevice::createImageWithInfo(const VkImageCreateInfo &imageInfo,
     if (vkBindImageMemory(device_, image, imageMemory, 0) != VK_SUCCESS) {
         throw std::runtime_error("failed to bind image memory!");
     }
+}
+
+void VeDevice::transitionImageLayout(VkImage image,
+                                     VkFormat format,
+                                     VkImageLayout oldLayout,
+                                     VkImageLayout newLayout) {
+    VkCommandBuffer commandBuffer = beginSingleTimeCommands();
+
+    VkImageMemoryBarrier barrier{};
+    barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+    barrier.oldLayout = oldLayout;
+    barrier.newLayout = newLayout;
+    barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    barrier.image = image;
+    // Image is not an array (not mipmapped).
+    barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    barrier.subresourceRange.baseMipLevel = 0;
+    barrier.subresourceRange.levelCount = 1;
+    barrier.subresourceRange.baseArrayLayer = 0;
+    barrier.subresourceRange.layerCount = 1;
+
+    // Set transition barrier masks
+    VkPipelineStageFlagBits sourceStage;
+    VkPipelineStageFlagBits destinationStage;
+
+    // See
+    // https://www.khronos.org/registry/vulkan/specs/1.0/html/vkspec.html#synchronization-access-types-supported
+    // for supported access types.
+    if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED &&
+        newLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL) {
+        // Undefined -> transfer destination: doesn't wait on anything and the transfer write must
+        // wait on the barrier.
+        barrier.srcAccessMask = 0;
+        barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;  // Transfer writes wait on barrier.
+
+        // Doesn't wait on anything, so use earliest possible pipeline stage.
+        sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+        destinationStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+    } else if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL &&
+               newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
+        // Transfer destination -> shader reading: shader reads should wait on transfer writes.
+        barrier.srcAccessMask =
+            VK_ACCESS_TRANSFER_WRITE_BIT;  // Transfer write must finish before creation.
+        barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;  // Shader read waits on barrier.
+
+        sourceStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+        destinationStage =
+            VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;  // We using resource in the fragment stage.
+    } else {
+        throw std::invalid_argument("unsupported layout transition");
+    }
+
+    vkCmdPipelineBarrier(
+        commandBuffer, sourceStage, destinationStage, 0, 0, nullptr, 0, nullptr, 1, &barrier);
+
+    endSingleTimeCommands(commandBuffer);
 }
 
 }  // namespace ve

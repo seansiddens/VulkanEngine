@@ -38,6 +38,8 @@ void VePipeline::bind(VkCommandBuffer commandBuffer) {
 void VePipeline::defaultPipelineConfigInfo(PipelineConfigInfo& configInfo) {
     // Initialize viewport create info. Since we have a dynamic viewport and scissor, pointers are
     // left NULL for now.
+    // Viewport and scissor are set dynamically during a renderpass using
+    // vkCmdSetViewport() and vkCmdSetScissor() respectively.
     configInfo.viewportInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
     configInfo.viewportInfo.pNext = nullptr;
     configInfo.viewportInfo.pScissors = nullptr;
@@ -116,6 +118,10 @@ void VePipeline::defaultPipelineConfigInfo(PipelineConfigInfo& configInfo) {
     configInfo.dynamicStateInfo.dynamicStateCount =
         static_cast<uint32_t>(configInfo.dynamicStateEnables.size());
     configInfo.dynamicStateInfo.flags = 0;
+
+    // By default expect Vertex binding and attribute descriptions defined in VeModel.
+    configInfo.bindingDescriptions = VeModel::Vertex::getBindingDescriptions();
+    configInfo.attributeDescriptions = VeModel::Vertex::getAttributeDescriptions();
 }
 
 std::vector<char> VePipeline::readFile(const std::string& filepath) {
@@ -174,8 +180,8 @@ void VePipeline::createGraphicsPipeline(const std::string& vertFilepath,
     shaderStages[1].pNext = nullptr;
     shaderStages[1].pSpecializationInfo = nullptr;
 
-    auto bindingDescriptions = VeModel::Vertex::getBindingDescriptions();
-    auto attributeDescriptions = VeModel::Vertex::getAttributeDescriptions();
+    auto& bindingDescriptions = configInfo.bindingDescriptions;
+    auto& attributeDescriptions = configInfo.attributeDescriptions;
     VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
     vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
     vertexInputInfo.vertexAttributeDescriptionCount =

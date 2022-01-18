@@ -58,13 +58,19 @@ endif()
 
 include_directories(external)
 
-# If TINYOBJ_PATH not specified in .env.cmake, try fetching from git repo
+# If TINYOBJ_PATH not specified in .env.cmake, try fetching from local project folder
 if (NOT TINYOBJ_PATH)
-  message(STATUS "TINYOBJ_PATH not specified in .env.cmake, using external/tinyobjloader")
-  set(TINYOBJ_PATH external/tinyobjloader)
+  message(STATUS "TINYOBJ_PATH not specified in .env.cmake, using external/tiny_obj_loader.h")
+  set(TINYOBJ_PATH external/tiny_obj_loader.h)
 endif()
 
-# Find all .cpp within the /src directory (including files within nested folders).
+# If STB_IMAGE_PATH not specified in .env.cmake, try fetching from local project folder
+if (NOT STB_IMAGE_PATH)
+  message(STATUS "STB_IMAGE_PATH not specified in .env.cmake, using external/stb_image.h")
+  set(STB_IMAGE_PATH external/stb_image.h)
+endif()
+
+# Find all .cpp and  within the /src directory (including files within nested folders).
 file(GLOB_RECURSE SOURCES ${PROJECT_SOURCE_DIR}/src/*.cpp)
 
 # Add our executable which is built from all of the source files.
@@ -93,6 +99,7 @@ if (WIN32)
     ${TINYOBJ_PATH}
     ${GLFW_INCLUDE_DIRS}
     ${GLM_PATH}
+    ${STB_IMAGE_PATH}
     )
 
   target_link_directories(${PROJECT_NAME} PUBLIC
@@ -106,6 +113,7 @@ elseif (UNIX)
     target_include_directories(${PROJECT_NAME} PUBLIC
       ${PROJECT_SOURCE_DIR}/src
       ${TINYOBJ_PATH}
+      ${STB_IMAGE_PATH}
     )
     target_link_libraries(${PROJECT_NAME} glfw ${Vulkan_LIBRARIES})
 endif()
@@ -141,8 +149,6 @@ foreach(GLSL ${GLSL_SOURCE_FILES})
     DEPENDS ${GLSL})
   list(APPEND SPIRV_BINARY_FILES ${SPIRV})
 endforeach(GLSL)
-
-set(Format COMMAND clang-format -i src/* -style=file)
 
 add_custom_target(
     Shaders

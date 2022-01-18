@@ -192,6 +192,8 @@ void VeSwapChain::createSwapChain() {
     swapChainImages.resize(imageCount);
     vkGetSwapchainImagesKHR(veDevice.device(), swapChain, &imageCount, swapChainImages.data());
 
+    // std::cout << "Image Count: " << imageCount << '\n';
+
     swapChainImageFormat = surfaceFormat.format;
     swapChainExtent = extent;
 }
@@ -399,13 +401,6 @@ VkPresentModeKHR VeSwapChain::chooseSwapPresentMode(
             return availablePresentMode;
         }
     }
-
-    // for (const auto &availablePresentMode : availablePresentModes) {
-    //   if (availablePresentMode == VK_PRESENT_MODE_IMMEDIATE_KHR) {
-    //     std::cout << "Present mode: Immediate" << std::endl;
-    //     return availablePresentMode;
-    //   }
-    // }
 
     // Default to V-Sync if other present modes are not available.
     std::cout << "Present mode: V-Sync" << std::endl;

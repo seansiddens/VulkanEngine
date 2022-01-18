@@ -28,13 +28,18 @@ class FirstApp {
 
    private:
     void loadGameObjects();
+    void createTextureImage();
 
+    // NOTE: These classes need to be initialized in this order.
     VeWindow veWindow{WIDTH, HEIGHT, "Hello Vulkan!"};
     VeDevice veDevice{veWindow};
     VeRenderer veRenderer{veWindow, veDevice};
 
     std::unique_ptr<VeDescriptorPool> globalPool{};
     VeGameObject::Map gameObjects;
+    VkImage textureImage;
+    VkDeviceMemory textureImageMemory;
+    VkImageView textureImageView;
 };
 
 }  // namespace ve

@@ -1,7 +1,8 @@
 #include "first_app.hpp"
 
 #include "movement_controller.hpp"
-#include "simple_render_system.hpp"
+#include "systems/point_light_system.hpp"
+#include "systems/simple_render_system.hpp"
 #include "ve_camera.hpp"
 #include "ve_frame_info.hpp"
 
@@ -10,6 +11,8 @@
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
 #include <glm/gtc/constants.hpp>
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
 
 // std
 #include <math.h>
@@ -41,9 +44,14 @@ FirstApp::FirstApp() {
             .build();
 
     loadGameObjects();
+    createTextureImage();
 }
 
-FirstApp::~FirstApp() {}
+FirstApp::~FirstApp() {
+    // Destroy texture image and it's associated memory.
+    vkDestroyImage(veDevice.device(), textureImage, nullptr);
+    vkFreeMemory(veDevice.device(), textureImageMemory, nullptr);
+}
 
 void FirstApp::run() {
     std::vector<std::unique_ptr<VeBuffer>> uboBuffers(VeSwapChain::MAX_FRAMES_IN_FLIGHT);
@@ -70,8 +78,10 @@ void FirstApp::run() {
             .build(globalDescriptorSets[i]);
     }
 
-    // Initialize the render system.
+    // Initialize the render systems.
     SimpleRenderSystem simpleRenderSystem{
+        veDevice, veRenderer.getSwapChainRenderPass(), globalSetLayout->getDescriptorSetLayout()};
+    PointLightSystem pointLightSystem{
         veDevice, veRenderer.getSwapChainRenderPass(), globalSetLayout->getDescriptorSetLayout()};
 
     // Initialize the camera and camera controller.
@@ -90,6 +100,9 @@ void FirstApp::run() {
 
     // Initialize the current time.
     auto currentTime = std::chrono::high_resolution_clock::now();
+    float totalTime = 0;
+    uint64_t frame = 0;
+
     bool mousePressed = false;
 
     // Start game loop.
@@ -100,6 +113,7 @@ void FirstApp::run() {
             std::chrono::duration<float, std::chrono::seconds::period>(newTime - currentTime)
                 .count();
         currentTime = newTime;
+        totalTime += frameTime;
 
         glm::vec3 forwardDir = glm::normalize(pivot - cameraPos);
 
@@ -176,12 +190,18 @@ void FirstApp::run() {
             GlobalUbo ubo{};
             ubo.projection = camera.getProjection();
             ubo.view = camera.getView();
+            float r = 2.0f;
+            float moveSpeed = 0.5f;
+            ubo.lightPosition = {r * std::cos(totalTime * moveSpeed),
+                                 -2.0 + std::sin(totalTime * moveSpeed),
+                                 r * std::sin(totalTime * moveSpeed)};
             uboBuffers[frameIndex]->writeToBuffer(&ubo);
             uboBuffers[frameIndex]->flush();
 
             // render
             veRenderer.beginSwapChainRenderPass(commandBuffer);
             simpleRenderSystem.renderGameObjects(frameInfo);
+            pointLightSystem.render(frameInfo);
             veRenderer.endSwapChainRenderPass(commandBuffer);
             veRenderer.endFrame();
         }
@@ -189,6 +209,8 @@ void FirstApp::run() {
 
     // Wait for GPU to finish before exiting.
     vkDeviceWaitIdle(veDevice.device());
+
+    frame += 1;
 }
 
 void FirstApp::loadGameObjects() {
@@ -213,6 +235,72 @@ void FirstApp::loadGameObjects() {
     floorObj.transform.translation = {0.f, 0.01f, 0.f};
     floorObj.transform.scale = {5.f, 1.f, 5.f};
     gameObjects.emplace(floorObj.getId(), std::move(floorObj));
+}
+
+void FirstApp::createTextureImage() {
+    int texWidth, texHeight, texChannels;
+    stbi_uc* pixels =
+        stbi_load("../textures/statue.jpg", &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+    VkDeviceSize imageSize = texWidth * texHeight * 4;
+    if (!pixels) {
+        throw std::runtime_error("failed to load texture image!");
+    }
+
+    VeBuffer imageStagingBuffer(
+        veDevice,
+        sizeof(pixels[0]),
+        imageSize,
+        VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+
+    imageStagingBuffer.map();
+    imageStagingBuffer.writeToBuffer(pixels);
+    imageStagingBuffer.unmap();
+
+    VkImageCreateInfo imageInfo{};
+    imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+    imageInfo.imageType = VK_IMAGE_TYPE_2D;
+    imageInfo.extent.width = static_cast<uint32_t>(texWidth);
+    imageInfo.extent.height = static_cast<uint32_t>(texHeight);
+    imageInfo.extent.depth = 1;
+    imageInfo.mipLevels = 1;
+    imageInfo.arrayLayers = 1;
+    imageInfo.format = VK_FORMAT_R8G8B8A8_SRGB;
+    imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
+    imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    // Going to be used as destination of our staging buffer and will be sampled in our shaders.
+    imageInfo.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+    imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;  // idk what this does.
+    // Used for multisampling.
+    imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+    imageInfo.flags = 0;
+
+    // Create the image.
+    veDevice.createImageWithInfo(
+        imageInfo, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, textureImage, textureImageMemory);
+
+    // The image data is currently stored in the staging buffer, so we must copy it to our image.
+    // Transition the image layout to be optimal for transfering data.
+    veDevice.transitionImageLayout(textureImage,
+                                   VK_FORMAT_R8G8B8A8_SRGB,
+                                   VK_IMAGE_LAYOUT_UNDEFINED,
+                                   VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+
+    // Copy from staging buffer to the image
+    veDevice.copyBufferToImage(imageStagingBuffer.getBuffer(),
+                               textureImage,
+                               static_cast<uint32_t>(texWidth),
+                               static_cast<uint32_t>(texHeight),
+                               1);
+
+    // Transition the image layout to be optimal for sampling.
+    veDevice.transitionImageLayout(textureImage,
+                                   VK_FORMAT_R8G8B8A8_SRGB,
+                                   VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                                   VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+    // TODO: See if we can move this higher.
+    stbi_image_free(pixels);
 }
 
 }  // namespace ve

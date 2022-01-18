@@ -55,7 +55,13 @@ class VeDescriptorPool {
 
        private:
         VeDevice &veDevice;
+
+        // Array holding the number of descriptors of specified type that can be allocated
+        // by the pool. Each descriptor can be made up of any combination of descriptors from
+        // within the pool.
         std::vector<VkDescriptorPoolSize> poolSizes{};
+
+        // The maximum number of descriptor sets the pool can allocate.
         uint32_t maxSets = 1000;
         VkDescriptorPoolCreateFlags poolFlags = 0;
     };

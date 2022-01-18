@@ -15,6 +15,9 @@ struct PipelineConfigInfo {
     PipelineConfigInfo(const PipelineConfigInfo&) = delete;
     PipelineConfigInfo& operator=(const PipelineConfigInfo&) = delete;
 
+    std::vector<VkVertexInputBindingDescription> bindingDescriptions{};
+    std::vector<VkVertexInputAttributeDescription> attributeDescriptions{};
+
     // Contains information about the viewport and the scissor.
     // The viewport describes how to transform from our gl_Position (-1 to 1) to pixels
     // in the image we are rendering to (0 to WIDTH/HEIHT).

@@ -89,8 +89,9 @@ void VeModel::createIndexBuffers(const std::vector<uint32_t> &indices) {
         indexCount,
         VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT};
+
     // Write vertex data to the staging buffer.
-    stagingBuffer.map();
+    stagingBuffer.map();  // Unmapped when destructor is called.
     stagingBuffer.writeToBuffer((void *)indices.data());
 
     // Create the vertex buffer.
