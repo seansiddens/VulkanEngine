@@ -29,6 +29,8 @@ class FirstApp {
    private:
     void loadGameObjects();
     void createTextureImage();
+    void createTextureImageView();
+    void createTextureSampler();
 
     // NOTE: These classes need to be initialized in this order.
     VeWindow veWindow{WIDTH, HEIGHT, "Hello Vulkan!"};
@@ -37,9 +39,10 @@ class FirstApp {
 
     std::unique_ptr<VeDescriptorPool> globalPool{};
     VeGameObject::Map gameObjects;
-    VkImage textureImage;
-    VkDeviceMemory textureImageMemory;
-    VkImageView textureImageView;
+    VkImage textureImage{};
+    VkDeviceMemory textureImageMemory{};
+    VkImageView textureImageView{};
+    VkSampler textureSampler{};
 };
 
 }  // namespace ve

@@ -15,16 +15,16 @@
 #include <stb_image.h>
 
 // std
-#include <math.h>
-
 #include <array>
 #include <cassert>
 #include <chrono>
+#include <cmath>
 #include <iostream>
 #include <stdexcept>
 
 // TODO: Fix gimbal-lock in arcball cam.
 // TODO: Prevent arcball zoom into pivot position (will cause runtime-error).
+// TODO: Abstract camera/controls into it's own class? (Maybe also an input class??).
 
 namespace ve {
 
@@ -41,14 +41,19 @@ FirstApp::FirstApp() {
         VeDescriptorPool::Builder(veDevice)
             .setMaxSets(VeSwapChain::MAX_FRAMES_IN_FLIGHT)
             .addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VeSwapChain::MAX_FRAMES_IN_FLIGHT)
+            .addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VeSwapChain::MAX_FRAMES_IN_FLIGHT)
             .build();
 
     loadGameObjects();
     createTextureImage();
+    createTextureImageView();
+    createTextureSampler();
 }
 
 FirstApp::~FirstApp() {
     // Destroy texture image and it's associated memory.
+    vkDestroySampler(veDevice.device(), textureSampler, nullptr);
+    vkDestroyImageView(veDevice.device(), textureImageView, nullptr);
     vkDestroyImage(veDevice.device(), textureImage, nullptr);
     vkFreeMemory(veDevice.device(), textureImageMemory, nullptr);
 }
@@ -68,13 +73,24 @@ void FirstApp::run() {
     auto globalSetLayout =
         VeDescriptorSetLayout::Builder(veDevice)
             .addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS)
+            .addBinding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
             .build();
 
     std::vector<VkDescriptorSet> globalDescriptorSets(VeSwapChain::MAX_FRAMES_IN_FLIGHT);
     for (int i = 0; i < globalDescriptorSets.size(); i++) {
+        // UBO info.
         auto bufferInfo = uboBuffers[i]->descriptorInfo();
+
+        // Image info.
+        VkDescriptorImageInfo imageInfo{};
+        imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        imageInfo.imageView = textureImageView;
+        imageInfo.sampler = textureSampler;
+
+        // Write to descriptor.
         VeDescriptorWriter(*globalSetLayout, *globalPool)
             .writeBuffer(0, &bufferInfo)
+            .writeImage(1, &imageInfo)
             .build(globalDescriptorSets[i]);
     }
 
@@ -192,9 +208,10 @@ void FirstApp::run() {
             ubo.view = camera.getView();
             float r = 2.0f;
             float moveSpeed = 0.5f;
-            ubo.lightPosition = {r * std::cos(totalTime * moveSpeed),
-                                 -2.0 + std::sin(totalTime * moveSpeed),
-                                 r * std::sin(totalTime * moveSpeed)};
+//            ubo.lightPosition = {r * std::cos(totalTime * moveSpeed),
+//                                 -2.0 + std::sin(totalTime * moveSpeed),
+//                                 r * std::sin(totalTime * moveSpeed)};
+            ubo.lightPosition = {0.5f, -1.5f, 0.f};
             uboBuffers[frameIndex]->writeToBuffer(&ubo);
             uboBuffers[frameIndex]->flush();
 
@@ -214,33 +231,40 @@ void FirstApp::run() {
 }
 
 void FirstApp::loadGameObjects() {
-    std::shared_ptr<VeModel> smoothVaseModel =
-        VeModel::createModelFromFile(veDevice, "models/smooth_vase.obj");
-    auto vaseObj = VeGameObject::createGameObject();
-    vaseObj.model = smoothVaseModel;
-    vaseObj.transform.translation = {0.f, -1.0f, 0.f};
-    vaseObj.transform.scale = {2.5f, 2.0f, 2.0f};
-    gameObjects.emplace(vaseObj.getId(), std::move(vaseObj));
+//    std::shared_ptr<VeModel> smoothVaseModel =
+//        VeModel::createModelFromFile(veDevice, "models/smooth_vase.obj");
+//    auto vaseObj = VeGameObject::createGameObject();
+//    vaseObj.model = smoothVaseModel;
+//    vaseObj.transform.translation = {0.f, -1.0f, 0.f};
+//    vaseObj.transform.scale = {2.5f, 2.0f, 2.0f};
+//    gameObjects.emplace(vaseObj.getId(), std::move(vaseObj));
+//
+//    std::shared_ptr<VeModel> cubeModel = VeModel::createModelFromFile(veDevice, "models/cube.obj");
+//    auto cubeObj = VeGameObject::createGameObject();
+//    cubeObj.model = cubeModel;
+//    cubeObj.transform.translation = {0.f, -0.5f, 0.f};
+//    cubeObj.transform.scale = {0.5f, 0.5f, 0.5f};
+//    gameObjects.emplace(cubeObj.getId(), std::move(cubeObj));
+//
+//    std::shared_ptr<VeModel> quadModel = VeModel::createModelFromFile(veDevice, "models/quad.obj");
+//    auto floorObj = VeGameObject::createGameObject();
+//    floorObj.model = quadModel;
+//    floorObj.transform.translation = {0.f, 0.01f, 0.f};
+//    floorObj.transform.scale = {5.f, 1.f, 5.f};
+//    gameObjects.emplace(floorObj.getId(), std::move(floorObj));
 
-    std::shared_ptr<VeModel> cubeModel = VeModel::createModelFromFile(veDevice, "models/cube.obj");
-    auto cubeObj = VeGameObject::createGameObject();
-    cubeObj.model = cubeModel;
-    cubeObj.transform.translation = {0.f, -0.5f, 0.f};
-    cubeObj.transform.scale = {0.5f, 0.5f, 0.5f};
-    gameObjects.emplace(cubeObj.getId(), std::move(cubeObj));
-
-    std::shared_ptr<VeModel> quadModel = VeModel::createModelFromFile(veDevice, "models/quad.obj");
-    auto floorObj = VeGameObject::createGameObject();
-    floorObj.model = quadModel;
-    floorObj.transform.translation = {0.f, 0.01f, 0.f};
-    floorObj.transform.scale = {5.f, 1.f, 5.f};
-    gameObjects.emplace(floorObj.getId(), std::move(floorObj));
+    std::shared_ptr<VeModel> vikingModel = VeModel::createModelFromFile(veDevice, "models/viking_room.obj");
+    auto vikingObj = VeGameObject::createGameObject();
+    vikingObj.model = vikingModel;
+    vikingObj.transform.rotation.x = M_PI / 2.f;
+    vikingObj.transform.translation.y -= 0.5f;
+    gameObjects.emplace(vikingObj.getId(), std::move(vikingObj));
 }
 
 void FirstApp::createTextureImage() {
     int texWidth, texHeight, texChannels;
     stbi_uc* pixels =
-        stbi_load("../textures/statue.jpg", &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+        stbi_load("../textures/viking_room.png", &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
     VkDeviceSize imageSize = texWidth * texHeight * 4;
     if (!pixels) {
         throw std::runtime_error("failed to load texture image!");
@@ -256,6 +280,8 @@ void FirstApp::createTextureImage() {
     imageStagingBuffer.map();
     imageStagingBuffer.writeToBuffer(pixels);
     imageStagingBuffer.unmap();
+
+    stbi_image_free(pixels);
 
     VkImageCreateInfo imageInfo{};
     imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -298,9 +324,51 @@ void FirstApp::createTextureImage() {
                                    VK_FORMAT_R8G8B8A8_SRGB,
                                    VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
                                    VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+}
 
-    // TODO: See if we can move this higher.
-    stbi_image_free(pixels);
+void FirstApp::createTextureImageView() {
+    VkImageViewCreateInfo viewInfo{};
+    viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+    viewInfo.image = textureImage;  // Image associated w/ the view.
+    viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+    viewInfo.format = VK_FORMAT_R8G8B8A8_SRGB;
+    viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    viewInfo.subresourceRange.baseMipLevel = 0;
+    viewInfo.subresourceRange.levelCount = 1;
+    viewInfo.subresourceRange.baseArrayLayer = 0;
+    viewInfo.subresourceRange.layerCount = 1;
+
+    if (vkCreateImageView(veDevice.device(), &viewInfo, nullptr, &textureImageView) != VK_SUCCESS) {
+        throw std::runtime_error("failed to create texture image view!");
+    }
+}
+
+void FirstApp::createTextureSampler() {
+    VkSamplerCreateInfo samplerInfo{};
+
+    // Filtering settings.
+    samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+    samplerInfo.magFilter = VK_FILTER_LINEAR;  // Oversampling.
+    samplerInfo.minFilter = VK_FILTER_LINEAR;  // Undersampling.
+
+    // How to handle addressing out of bounds of the image.
+    samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+    samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+    samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+
+    samplerInfo.anisotropyEnable = VK_TRUE;
+    samplerInfo.maxAnisotropy = veDevice.properties.limits.maxSamplerAnisotropy;
+    samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+    samplerInfo.unnormalizedCoordinates = VK_FALSE;
+    samplerInfo.compareEnable = VK_FALSE;
+    samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
+    samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+    samplerInfo.mipLodBias = 0.0f;
+    samplerInfo.minLod = 0.0f;
+    samplerInfo.maxLod = 0.0f;
+    if (vkCreateSampler(veDevice.device(), &samplerInfo, nullptr, &textureSampler) != VK_SUCCESS) {
+        throw std::runtime_error("failed to create texture sampler!");
+    }
 }
 
 }  // namespace ve
