@@ -22,9 +22,11 @@
 #include <iostream>
 #include <stdexcept>
 
-// TODO: Fix gimbal-lock in arcball cam.
+// TODO: Fix gimbal-lock in arcball cam (when view vec aligns w/ up vec).
 // TODO: Prevent arcball zoom into pivot position (will cause runtime-error).
 // TODO: Abstract camera/controls into it's own class? (Maybe also an input class??).
+// TODO: Texture abstraction.
+// TODO: Stuttering when fullscreen?
 
 namespace ve {
 
@@ -41,7 +43,8 @@ FirstApp::FirstApp() {
         VeDescriptorPool::Builder(veDevice)
             .setMaxSets(VeSwapChain::MAX_FRAMES_IN_FLIGHT)
             .addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VeSwapChain::MAX_FRAMES_IN_FLIGHT)
-            .addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VeSwapChain::MAX_FRAMES_IN_FLIGHT)
+            .addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+                         VeSwapChain::MAX_FRAMES_IN_FLIGHT)
             .build();
 
     loadGameObjects();
@@ -134,8 +137,8 @@ void FirstApp::run() {
         glm::vec3 forwardDir = glm::normalize(pivot - cameraPos);
 
         // Poll events.
-        glfwPollEvents();
-        if (glfwGetKey(veWindow.getGLFWWindow(), GLFW_KEY_ESCAPE) == GLFW_PRESS) break;
+        veInput.pollEvents();
+        if (veInput.getKey(GLFW_KEY_ESCAPE) == GLFW_PRESS) break;
         if (glfwGetMouseButton(veWindow.getGLFWWindow(), GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
             mousePressed = true;
         } else {
@@ -208,9 +211,9 @@ void FirstApp::run() {
             ubo.view = camera.getView();
             float r = 2.0f;
             float moveSpeed = 0.5f;
-//            ubo.lightPosition = {r * std::cos(totalTime * moveSpeed),
-//                                 -2.0 + std::sin(totalTime * moveSpeed),
-//                                 r * std::sin(totalTime * moveSpeed)};
+            //            ubo.lightPosition = {r * std::cos(totalTime * moveSpeed),
+            //                                 -2.0 + std::sin(totalTime * moveSpeed),
+            //                                 r * std::sin(totalTime * moveSpeed)};
             ubo.lightPosition = {0.5f, -1.5f, 0.f};
             uboBuffers[frameIndex]->writeToBuffer(&ubo);
             uboBuffers[frameIndex]->flush();
@@ -231,29 +234,26 @@ void FirstApp::run() {
 }
 
 void FirstApp::loadGameObjects() {
-//    std::shared_ptr<VeModel> smoothVaseModel =
-//        VeModel::createModelFromFile(veDevice, "models/smooth_vase.obj");
-//    auto vaseObj = VeGameObject::createGameObject();
-//    vaseObj.model = smoothVaseModel;
-//    vaseObj.transform.translation = {0.f, -1.0f, 0.f};
-//    vaseObj.transform.scale = {2.5f, 2.0f, 2.0f};
-//    gameObjects.emplace(vaseObj.getId(), std::move(vaseObj));
-//
-//    std::shared_ptr<VeModel> cubeModel = VeModel::createModelFromFile(veDevice, "models/cube.obj");
-//    auto cubeObj = VeGameObject::createGameObject();
-//    cubeObj.model = cubeModel;
-//    cubeObj.transform.translation = {0.f, -0.5f, 0.f};
-//    cubeObj.transform.scale = {0.5f, 0.5f, 0.5f};
-//    gameObjects.emplace(cubeObj.getId(), std::move(cubeObj));
-//
-//    std::shared_ptr<VeModel> quadModel = VeModel::createModelFromFile(veDevice, "models/quad.obj");
-//    auto floorObj = VeGameObject::createGameObject();
-//    floorObj.model = quadModel;
-//    floorObj.transform.translation = {0.f, 0.01f, 0.f};
-//    floorObj.transform.scale = {5.f, 1.f, 5.f};
-//    gameObjects.emplace(floorObj.getId(), std::move(floorObj));
+    //    std::shared_ptr<VeModel> smoothVaseModel =
+    //        VeModel::createModelFromFile(veDevice, "models/smooth_vase.obj");
+    //    auto vaseObj = VeGameObject::createGameObject();
+    //    vaseObj.model = smoothVaseModel;
+    //    vaseObj.transform.translation = {0.f, -1.0f, 0.f};
+    //    vaseObj.transform.scale = {2.5f, 2.0f, 2.0f};
+    //    gameObjects.emplace(vaseObj.getId(), std::move(vaseObj));
+    //
+    //    std::shared_ptr<VeModel> cubeModel = VeModel::createModelFromFile(veDevice,
+    //    "models/cube.obj"); auto cubeObj = VeGameObject::createGameObject(); cubeObj.model =
+    //    cubeModel; cubeObj.transform.translation = {0.f, -0.5f, 0.f}; cubeObj.transform.scale =
+    //    {0.5f, 0.5f, 0.5f}; gameObjects.emplace(cubeObj.getId(), std::move(cubeObj));
+    //
+    //    std::shared_ptr<VeModel> quadModel = VeModel::createModelFromFile(veDevice,
+    //    "models/quad.obj"); auto floorObj = VeGameObject::createGameObject(); floorObj.model =
+    //    quadModel; floorObj.transform.translation = {0.f, 0.01f, 0.f}; floorObj.transform.scale =
+    //    {5.f, 1.f, 5.f}; gameObjects.emplace(floorObj.getId(), std::move(floorObj));
 
-    std::shared_ptr<VeModel> vikingModel = VeModel::createModelFromFile(veDevice, "models/viking_room.obj");
+    std::shared_ptr<VeModel> vikingModel =
+        VeModel::createModelFromFile(veDevice, "models/viking_room.obj");
     auto vikingObj = VeGameObject::createGameObject();
     vikingObj.model = vikingModel;
     vikingObj.transform.rotation.x = M_PI / 2.f;
@@ -263,8 +263,8 @@ void FirstApp::loadGameObjects() {
 
 void FirstApp::createTextureImage() {
     int texWidth, texHeight, texChannels;
-    stbi_uc* pixels =
-        stbi_load("../textures/viking_room.png", &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+    stbi_uc* pixels = stbi_load(
+        "../textures/viking_room.png", &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
     VkDeviceSize imageSize = texWidth * texHeight * 4;
     if (!pixels) {
         throw std::runtime_error("failed to load texture image!");

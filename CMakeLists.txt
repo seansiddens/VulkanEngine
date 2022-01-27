@@ -112,8 +112,8 @@ elseif (UNIX)
     message(STATUS "CREATING BUILD FOR UNIX")
     target_include_directories(${PROJECT_NAME} PUBLIC
       ${PROJECT_SOURCE_DIR}/src
-      ${TINYOBJ_PATH}
-      ${STB_IMAGE_PATH}
+      # ${TINYOBJ_PATH}
+      # ${STB_IMAGE_PATH}
     )
     target_link_libraries(${PROJECT_NAME} glfw ${Vulkan_LIBRARIES})
 endif()

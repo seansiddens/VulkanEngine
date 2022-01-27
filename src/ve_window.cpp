@@ -1,5 +1,7 @@
 #include "ve_window.hpp"
 
+#include "ve_input.hpp"
+
 #include <stdexcept>
 
 namespace ve {
@@ -19,7 +21,7 @@ void VeWindow::initWindow() {
     glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 
     window = glfwCreateWindow(width, height, windowName.c_str(), nullptr, nullptr);
-    glfwSetWindowUserPointer(window, this);
+
     glfwSetFramebufferSizeCallback(window, framebufferResizeCallback);
 }
 
@@ -29,11 +31,13 @@ void VeWindow::createWindowSurface(VkInstance instance, VkSurfaceKHR *surface) {
     }
 }
 
+// Callback has to be static and void so we need to retrieve the window instance from the
+// user pointer.
 void VeWindow::framebufferResizeCallback(GLFWwindow *window, int width, int height) {
-    auto veWindow = reinterpret_cast<VeWindow *>(glfwGetWindowUserPointer(window));
-    veWindow->framebufferResized = true;
-    veWindow->width = width;
-    veWindow->height = height;
+    VeWindow &veWindow = reinterpret_cast<VeInput *>(glfwGetWindowUserPointer(window))->getWindow();
+    veWindow.framebufferResized = true;
+    veWindow.width = width;
+    veWindow.height = height;
 }
 
 }  // namespace ve

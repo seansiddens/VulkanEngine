@@ -5,6 +5,8 @@
 
 #include <string>
 
+// TODO: Validation errors when resizing window.
+
 namespace ve {
 
 class VeWindow {
@@ -17,10 +19,10 @@ class VeWindow {
     VeWindow &operator=(const VeWindow &) = delete;
 
     bool shouldClose() { return glfwWindowShouldClose(window); }
-    VkExtent2D getExtent() { return {static_cast<uint32_t>(width), static_cast<uint32_t>(height)}; }
-    bool wasWindowResized() { return framebufferResized; }
+    [[nodiscard]] VkExtent2D getExtent() const { return {static_cast<uint32_t>(width), static_cast<uint32_t>(height)}; }
+    [[nodiscard]] bool wasWindowResized() const { return framebufferResized; }
     void resetWindowResizedFlag() { framebufferResized = false; }
-    GLFWwindow *getGLFWWindow() const { return window; }
+    [[nodiscard]] GLFWwindow *getGLFWWindow() const { return window; }
 
     void createWindowSurface(VkInstance instance, VkSurfaceKHR *surface);
 
