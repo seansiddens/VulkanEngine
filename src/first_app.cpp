@@ -139,7 +139,12 @@ void FirstApp::run() {
         // Poll events.
         veInput.pollEvents();
         if (veInput.getKey(GLFW_KEY_ESCAPE) == GLFW_PRESS) break;
-        if (glfwGetMouseButton(veWindow.getGLFWWindow(), GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
+        // if (glfwGetMouseButton(veWindow.getGLFWWindow(), GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
+        //     mousePressed = true;
+        // } else {
+        //     mousePressed = false;
+        // }
+        if (veInput.getMouseButton(GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
             mousePressed = true;
         } else {
             mousePressed = false;

@@ -12,6 +12,7 @@ VeInput::VeInput(VeWindow &window) : veWindow{window} {
     // Set user pointer to point to this instance.
     glfwSetWindowUserPointer(veWindow.getGLFWWindow(), this);
     glfwSetKeyCallback(veWindow.getGLFWWindow(), keyCallback);
+    glfwSetMouseButtonCallback(veWindow.getGLFWWindow(), mouseButtonCallback);
 }
 
 void VeInput::pollEvents() {
@@ -31,6 +32,14 @@ void VeInput::setMouseButton(int button, int action) {
 int VeInput::getKey(int key) {
     if (keyState.count(key) > 0) {
         return keyState[key];
+    }
+
+    return GLFW_KEY_UNKNOWN;
+}
+
+int VeInput::getMouseButton(int button) {
+    if (mouseState.count(button) > 0) {
+        return mouseState[button];
     }
 
     return GLFW_KEY_UNKNOWN;
