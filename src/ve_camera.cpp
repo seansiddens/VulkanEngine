@@ -6,6 +6,11 @@
 
 namespace ve {
 
+VeCamera::VeCamera(VeInput &input, glm::vec3 _position, glm::vec3 _pivot) : veInput{input} {
+    position = _position;
+    pivot = _pivot;
+}
+
 void VeCamera::setOrthographicProjection(
     float left, float right, float top, float bottom, float near, float far) {
     projectionMatrix = glm::mat4{1.0f};
@@ -83,6 +88,41 @@ void VeCamera::setViewYXZ(glm::vec3 position, glm::vec3 rotation) {
     viewMatrix[3][0] = -glm::dot(u, position);
     viewMatrix[3][1] = -glm::dot(v, position);
     viewMatrix[3][2] = -glm::dot(w, position);
+}
+
+void VeCamera::update(float deltaTime) {
+    // A movement from left to right = 2 * PI = 360 deg
+    float angleScaleX = (2.f * M_PI / static_cast<float>(veInput.getWindow().getExtent().width));
+    // A movement from top to bottom = PI = 180 deg.
+    float angleScaleY = (M_PI / static_cast<float>(veInput.getWindow().getExtent().height));
+
+    forwardDir = glm::normalize(pivot - position);
+
+    // Zoom in/out.
+    if (veInput.getKey(GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
+        position += (zoomSpeed * deltaTime * forwardDir);
+    }
+    if (veInput.getKey(GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) {
+        position -= (zoomSpeed * deltaTime * forwardDir);
+    }
+
+    // Amount to rotate.
+    float deltaAngleX = (veInput.getDeltaX() * -1.0) * angleScaleX;
+    float deltaAngleY = (veInput.getDeltaY() * -1.0) * angleScaleY;
+
+    if (veInput.getMouseButton(GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
+        // Rotate camera object around pivot point about the Y axis.
+        glm::mat4 rotMatrixX(1.f);
+        rotMatrixX = glm::rotate(rotMatrixX, deltaAngleX, glm::vec3{0.f, -1.f, 0.f});
+        position = rotMatrixX * glm::vec4(position - pivot, 1.f) + glm::vec4(pivot, 1.f);
+
+        // Rotate camera around pivot about the camera object's right dir.
+        glm::mat4 rotationMatrixY(1.0f);
+        rotationMatrixY = glm::rotate(rotationMatrixY, deltaAngleY, getRightDir());
+        position = rotationMatrixY * glm::vec4(position - pivot, 1.f) + glm::vec4(pivot, 1.f);
+    }
+
+    setViewTarget(position, pivot);
 }
 
 }  // namespace ve
