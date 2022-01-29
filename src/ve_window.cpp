@@ -1,8 +1,8 @@
 #include "ve_window.hpp"
 
-#include "ve_input.hpp"
-
 #include <stdexcept>
+
+#include "ve_input.hpp"
 
 namespace ve {
 

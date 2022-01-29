@@ -19,7 +19,9 @@ class VeWindow {
     VeWindow &operator=(const VeWindow &) = delete;
 
     bool shouldClose() { return glfwWindowShouldClose(window); }
-    [[nodiscard]] VkExtent2D getExtent() const { return {static_cast<uint32_t>(width), static_cast<uint32_t>(height)}; }
+    [[nodiscard]] VkExtent2D getExtent() const {
+        return {static_cast<uint32_t>(width), static_cast<uint32_t>(height)};
+    }
     [[nodiscard]] bool wasWindowResized() const { return framebufferResized; }
     void resetWindowResizedFlag() { framebufferResized = false; }
     [[nodiscard]] GLFWwindow *getGLFWWindow() const { return window; }
