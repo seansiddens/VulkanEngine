@@ -40,6 +40,7 @@ class VeCamera {
     glm::mat4 projectionMatrix{1.f};
     glm::mat4 viewMatrix{1.f};
 
+    glm::vec3 up{0.f, -1.f, 0.f};
     glm::vec3 position{0.f};
     glm::vec3 pivot{0.f, 1.f, 0.f};
     glm::vec3 forwardDir;

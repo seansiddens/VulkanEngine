@@ -2,13 +2,17 @@
 
 #include <cassert>
 #include <glm/ext/matrix_transform.hpp>
+#include <iostream>
 #include <limits>
 
 namespace ve {
 
 VeCamera::VeCamera(VeInput &input, glm::vec3 _position, glm::vec3 _pivot) : veInput{input} {
+    assert(glm::dot(_pivot - _position, _pivot - _position) > std::numeric_limits<float>::epsilon() &&
+           "Pivot must not be the same as position!");
     position = _position;
     pivot = _pivot;
+    setViewTarget(position, pivot);
 }
 
 void VeCamera::setOrthographicProjection(
@@ -33,9 +37,10 @@ void VeCamera::setPerspectiveProjection(float fovy, float aspect, float near, fl
     projectionMatrix[3][2] = -(far * near) / (far - near);
 }
 
-void VeCamera::setViewDirection(glm::vec3 position, glm::vec3 direction, glm::vec3 up) {
+void VeCamera::setViewDirection(glm::vec3 _position, glm::vec3 direction, glm::vec3 up) {
     assert(glm::dot(direction, direction) > std::numeric_limits<float>::epsilon() &&
            "Direction must be a non-zero vector");
+    position = _position;
 
     // Construct an orthonormal basis.
     const glm::vec3 w{glm::normalize(direction)};
@@ -99,11 +104,18 @@ void VeCamera::update(float deltaTime) {
     forwardDir = glm::normalize(pivot - position);
 
     // Zoom in/out.
+    glm::vec3 newPosition = position;
     if (veInput.getKey(GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
-        position += (zoomSpeed * deltaTime * forwardDir);
+        newPosition += (zoomSpeed * deltaTime * forwardDir);
+        // Check that newPosition != target.
+        glm::vec3 dstFromPivot = newPosition - pivot;
+        if (glm::dot(dstFromPivot, dstFromPivot) < std::numeric_limits<float>::epsilon()) {
+            newPosition = position; // Undo translation.
+        }
     }
+
     if (veInput.getKey(GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) {
-        position -= (zoomSpeed * deltaTime * forwardDir);
+        newPosition -= (zoomSpeed * deltaTime * forwardDir);
     }
 
     // Amount to rotate.
@@ -114,15 +126,16 @@ void VeCamera::update(float deltaTime) {
         // Rotate camera object around pivot point about the Y axis.
         glm::mat4 rotMatrixX(1.f);
         rotMatrixX = glm::rotate(rotMatrixX, deltaAngleX, glm::vec3{0.f, -1.f, 0.f});
-        position = rotMatrixX * glm::vec4(position - pivot, 1.f) + glm::vec4(pivot, 1.f);
+        newPosition = rotMatrixX * glm::vec4(newPosition - pivot, 1.f) + glm::vec4(pivot, 1.f);
 
         // Rotate camera around pivot about the camera object's right dir.
         glm::mat4 rotationMatrixY(1.0f);
         rotationMatrixY = glm::rotate(rotationMatrixY, deltaAngleY, getRightDir());
-        position = rotationMatrixY * glm::vec4(position - pivot, 1.f) + glm::vec4(pivot, 1.f);
+        newPosition = rotationMatrixY * glm::vec4(newPosition - pivot, 1.f) + glm::vec4(pivot, 1.f);
+
     }
 
-    setViewTarget(position, pivot);
+    setViewTarget(newPosition, pivot);
 }
 
 }  // namespace ve
