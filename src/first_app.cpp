@@ -30,8 +30,8 @@ struct GlobalUbo {
     glm::mat4 projection{1.f};
     glm::mat4 view{1.f};
     glm::vec4 ambientLightColor{1.f, 1.f, 1.f, .01f};  // w is light intensity
-    glm::vec3 lightPosition{-2.f, -3.f, 0.5}; 
-    alignas(16) glm::vec4 lightColor{1.f};  // w is light intensity
+    glm::vec3 lightPosition{0.f, -3.f, 0.0}; 
+    alignas(16) glm::vec4 lightColor{1.f, 1.f, 1.f, 5.f};  // w is light intensity
 };
 
 FirstApp::FirstApp() {
@@ -39,16 +39,16 @@ FirstApp::FirstApp() {
         VeDescriptorPool::Builder(veDevice)
             .setMaxSets(VeSwapChain::MAX_FRAMES_IN_FLIGHT)
             .addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VeSwapChain::MAX_FRAMES_IN_FLIGHT)
-            .addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-                         VeSwapChain::MAX_FRAMES_IN_FLIGHT)
             .build();
 
     loadGameObjects();
 }
 
-FirstApp::~FirstApp() { vkDestroySampler(veDevice.device(), textureSampler, nullptr); }
-
 void FirstApp::run() {
+    // Set clear color.
+    veRenderer.setClearColor({0.7, 0.7, 0.9, 1.f});
+
+    // Create uniform buffer objects.
     std::vector<std::unique_ptr<VeBuffer>> uboBuffers(VeSwapChain::MAX_FRAMES_IN_FLIGHT);
     for (int i = 0; i < uboBuffers.size(); i++) {
         uboBuffers[i] = std::make_unique<VeBuffer>(veDevice,
@@ -63,7 +63,6 @@ void FirstApp::run() {
     auto globalSetLayout =
         VeDescriptorSetLayout::Builder(veDevice)
             .addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS)
-            .addBinding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
             .build();
 
     std::vector<VkDescriptorSet> globalDescriptorSets(VeSwapChain::MAX_FRAMES_IN_FLIGHT);
@@ -71,16 +70,9 @@ void FirstApp::run() {
         // UBO info.
         auto bufferInfo = uboBuffers[i]->descriptorInfo();
 
-        // Image info.
-        VkDescriptorImageInfo imageInfo{};
-        imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        imageInfo.imageView = textureImageView;
-        imageInfo.sampler = textureSampler;
-
         // Write to descriptor.
         VeDescriptorWriter(*globalSetLayout, *globalPool)
             .writeBuffer(0, &bufferInfo)
-            .writeImage(1, &imageInfo)
             .build(globalDescriptorSets[i]);
     }
 
@@ -97,10 +89,8 @@ void FirstApp::run() {
 
     // Initialize the current time.
     auto currentTime = std::chrono::high_resolution_clock::now();
-    float totalTime = 0;
-    uint64_t frame = 0;
-
-    bool mousePressed = false;
+    float totalTime = 0; // Total elapsed time of the application.
+    uint64_t frame = 0; // Current frame.
 
     // Start game loop.
     while (!veWindow.shouldClose()) {
@@ -137,12 +127,6 @@ void FirstApp::run() {
             GlobalUbo ubo{};
             ubo.projection = camera.getProjection();
             ubo.view = camera.getView();
-            float r = 2.0f;
-            float moveSpeed = 0.5f;
-            //            ubo.lightPosition = {r * std::cos(totalTime * moveSpeed),
-            //                                 -2.0 + std::sin(totalTime * moveSpeed),
-            //                                 r * std::sin(totalTime * moveSpeed)};
-            ubo.lightPosition = {0.5f, -1.5f, 0.f};
             uboBuffers[frameIndex]->writeToBuffer(&ubo);
             uboBuffers[frameIndex]->flush();
 
@@ -165,16 +149,11 @@ void FirstApp::run() {
 }
 
 void FirstApp::loadGameObjects() {
-    textureSampler = VeTexture::createTextureSampler(veDevice);
-
     std::shared_ptr<VeTexture> statueTexture =
         VeTexture::createTextureFromFile(veDevice, "textures/statue.jpg");
 
     std::shared_ptr<VeTexture> vikingTexture =
         VeTexture::createTextureFromFile(veDevice, "textures/viking_room.png");
-
-
-    textureImageView = statueTexture->imageView();
 
     std::shared_ptr<VeModel> smoothVaseModel =
         VeModel::createModelFromFile(veDevice, "models/smooth_vase.obj");
@@ -198,14 +177,14 @@ void FirstApp::loadGameObjects() {
     //    quadModel; floorObj.transform.translation = {0.f, 0.01f, 0.f}; floorObj.transform.scale =
     //    {5.f, 1.f, 5.f}; gameObjects.emplace(floorObj.getId(), std::move(floorObj));
 
-    std::shared_ptr<VeModel> vikingModel =
-        VeModel::createModelFromFile(veDevice, "models/viking_room.obj");
-    auto vikingObj = VeGameObject::createGameObject();
-    vikingObj.model = vikingModel;
-    vikingObj.transform.rotation.x = M_PI / 2.f;
-    vikingObj.transform.translation.y -= 0.5f;
-    vikingObj.texture = vikingTexture;
-    gameObjects.emplace(vikingObj.getId(), std::move(vikingObj));
+    // std::shared_ptr<VeModel> vikingModel =
+    //     VeModel::createModelFromFile(veDevice, "models/viking_room.obj");
+    // auto vikingObj = VeGameObject::createGameObject();
+    // vikingObj.model = vikingModel;
+    // vikingObj.transform.rotation.x = M_PI / 2.f;
+    // vikingObj.transform.translation.y -= 0.5f;
+    // vikingObj.texture = vikingTexture;
+    // gameObjects.emplace(vikingObj.getId(), std::move(vikingObj));
 }
 
 }  // namespace ve

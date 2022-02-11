@@ -19,7 +19,6 @@ class FirstApp {
     static constexpr int HEIGHT = 720;
 
     FirstApp();
-    ~FirstApp();
 
     // Remove copy constructors.
     FirstApp(const FirstApp &) = delete;
@@ -41,8 +40,6 @@ class FirstApp {
 
     std::unique_ptr<VeDescriptorPool> globalPool{};
     VeGameObject::Map gameObjects;
-    VkSampler textureSampler{};
-    VkImageView textureImageView{};
 };
 
 }  // namespace ve

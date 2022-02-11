@@ -38,6 +38,8 @@ class VeRenderer {
         return currentFrameIndex;
     }
 
+    void setClearColor(VkClearColorValue _clearColor) { clearColor = _clearColor; }
+
    private:
     void createCommandBuffers();
     void freeCommandBuffers();
@@ -48,6 +50,7 @@ class VeRenderer {
     std::unique_ptr<VeSwapChain> veSwapChain;
     std::vector<VkCommandBuffer> commandBuffers;
 
+    VkClearColorValue clearColor{0.f, 0.f, 0.f, 1.f};
     uint32_t currentImageIndex{0};
     int currentFrameIndex{0};
     bool isFrameStarted{false};
