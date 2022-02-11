@@ -106,8 +106,8 @@ void SimpleRenderSystem::createPipeline(VkRenderPass renderPass) {
     pipelineConfig.renderPass = renderPass;
     pipelineConfig.pipelineLayout = pipelineLayout;
     vePipeline = std::make_unique<VePipeline>(veDevice,
-                                              "shaders/simple_shader.vert.spv",
-                                              "shaders/simple_shader.frag.spv",
+                                              "shaders/textured_lit_mat.vert.spv",
+                                              "shaders/textured_lit_mat.frag.spv",
                                               pipelineConfig);
 }
 

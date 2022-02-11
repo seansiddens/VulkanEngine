@@ -15,8 +15,6 @@ layout(set = 0, binding = 0) uniform GlobalUbo{
     vec4 lightColor;
 } ubo;
 
-layout(set = 0, binding = 1) uniform sampler2D texSampler;
-
 layout(set = 1, binding = 0) uniform sampler2D texSampler_;
 
 layout(push_constant) uniform Push {
@@ -36,12 +34,13 @@ void main() {
     // color * intensity * attenuation (effected by distance).
     vec3 lightColor = ubo.lightColor.rgb * ubo.lightColor.w * attenuation;
 
+    // Scaled by intensity (w).
     vec3 ambientLightColor = ubo.ambientLightColor.rgb * ubo.ambientLightColor.w;
 
     // fragNormalWorld must be normalized again because the linear interpolation of normal vectors
-    // isn't necesarrily normal itself.
+    // isn't necessarily normal itself.
     vec3 diffuseLight = lightColor * max(dot(normalize(fragNormalWorld), normalize(directionToLight)), 0);
 
-    // Per-frag diffuse shading.
+    // Per-frag diffuse shading + texture sampling.
     outColor = vec4(texture(texSampler_, fragTexCoord).rgb * (diffuseLight + ambientLightColor), 1.0);
 }
