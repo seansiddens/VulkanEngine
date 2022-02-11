@@ -41,10 +41,8 @@ class FirstApp {
 
     std::unique_ptr<VeDescriptorPool> globalPool{};
     VeGameObject::Map gameObjects;
-    VkImage textureImage{};
-    VkDeviceMemory textureImageMemory{};
-    VkImageView textureImageView{};
     VkSampler textureSampler{};
+    VkImageView textureImageView{};
 };
 
 }  // namespace ve

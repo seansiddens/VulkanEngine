@@ -3,6 +3,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "ve_model.hpp"
+#include "ve_texture.hpp"
 
 // std
 #include <memory>
@@ -40,6 +41,7 @@ class VeGameObject {
     std::shared_ptr<VeModel> model{};
     glm::vec3 color{};
     TransformComponent transform{};
+    std::shared_ptr<VeTexture> texture{};
 
    private:
     VeGameObject(id_t objId) : id{objId} {}

@@ -17,6 +17,8 @@ layout(set = 0, binding = 0) uniform GlobalUbo{
 
 layout(set = 0, binding = 1) uniform sampler2D texSampler;
 
+layout(set = 1, binding = 0) uniform sampler2D texSampler_;
+
 layout(push_constant) uniform Push {
     mat4 modelMatrix;
     mat4 normalMatrix;
@@ -41,5 +43,5 @@ void main() {
     vec3 diffuseLight = lightColor * max(dot(normalize(fragNormalWorld), normalize(directionToLight)), 0);
 
     // Per-frag diffuse shading.
-    outColor = vec4(texture(texSampler, fragTexCoord).rgb * (diffuseLight + ambientLightColor), 1.0);
+    outColor = vec4(texture(texSampler_, fragTexCoord).rgb * (diffuseLight + ambientLightColor), 1.0);
 }

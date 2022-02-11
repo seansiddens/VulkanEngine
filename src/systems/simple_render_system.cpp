@@ -25,13 +25,55 @@ struct SimplePushConstantData {
 
 SimpleRenderSystem::SimpleRenderSystem(VeDevice& device,
                                        VkRenderPass renderPass,
-                                       VkDescriptorSetLayout globalSetLayout)
+                                       VkDescriptorSetLayout globalSetLayout,
+                                       VeGameObject::Map& gameObjects)
     : veDevice{device} {
+
+    textureSampler = VeTexture::createTextureSampler(veDevice);
+
+    numGameObjects = gameObjects.size();
+
+    std::cout << "Number of game objects: " << numGameObjects << "\n";
+
+    // Create descriptor pool which allows for a descriptor set for each game object.
+    simplePool = VeDescriptorPool::Builder(veDevice)
+                     .setMaxSets(numGameObjects)
+                     .addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, numGameObjects)
+                     .build();
+
+    // Create descriptor layout.
+    simpleLayout =
+        VeDescriptorSetLayout::Builder(veDevice)
+            .addBinding(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
+            .build();
+
+    // Create descriptor set for each game object
+    for (const auto& [id, obj] : gameObjects) {
+            VkDescriptorSet descriptorSet{};
+
+            // Write material info.
+            VkDescriptorImageInfo imageInfo{};
+            imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            imageInfo.imageView = obj.texture->imageView();
+            imageInfo.sampler = textureSampler;
+
+            // Allocate and write descriptor set.
+            VeDescriptorWriter(*simpleLayout, *simplePool)
+                .writeImage(0, &imageInfo)
+                .build(descriptorSet);
+
+            // Insert into our map.
+            objectDescriptorSets.emplace(id, descriptorSet);
+        }
+
+    std::cout << "# of object descriptor sets: " << objectDescriptorSets.size();
+
     createPipelineLayout(globalSetLayout);
     createPipeline(renderPass);
 }
 
 SimpleRenderSystem::~SimpleRenderSystem() {
+    vkDestroySampler(veDevice.device(), textureSampler, nullptr);
     vkDestroyPipelineLayout(veDevice.device(), pipelineLayout, nullptr);
 }
 
@@ -41,7 +83,8 @@ void SimpleRenderSystem::createPipelineLayout(VkDescriptorSetLayout globalSetLay
     pushConstantRange.offset = 0;
     pushConstantRange.size = sizeof(SimplePushConstantData);
 
-    std::vector<VkDescriptorSetLayout> descriptorSetLayouts{globalSetLayout};
+    std::vector<VkDescriptorSetLayout> descriptorSetLayouts{globalSetLayout,
+                                                            simpleLayout->getDescriptorSetLayout()};
 
     VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
     pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -84,20 +127,37 @@ void SimpleRenderSystem::renderGameObjects(FrameInfo& frameInfo) {
 
     // Render each game object.
     for (auto& kv : frameInfo.gameObjects) {
+        auto id = kv.first;
         auto& obj = kv.second;
+
+        // Push data containing model and normal matrix.
         SimplePushConstantData push{};
         push.modelMatrix = obj.transform.mat4();
         push.normalMatrix = obj.transform.normalMatrix();
 
+        // Bind the descriptor set of the object we are rendering.
+        vkCmdBindDescriptorSets(frameInfo.commandBuffer,
+                                VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                pipelineLayout,
+                                1,
+                                1,
+                                &objectDescriptorSets[id],
+                                0,
+                                nullptr);
+
+        // Send push constants.
         vkCmdPushConstants(frameInfo.commandBuffer,
                            pipelineLayout,
                            VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
                            0,
                            sizeof(SimplePushConstantData),
                            &push);
+
         obj.model->bind(frameInfo.commandBuffer);
         obj.model->draw(frameInfo.commandBuffer);
     }
+
+    // throw std::runtime_error("Throwing error after rendering every game object!");
 }
 
 }  // namespace ve
