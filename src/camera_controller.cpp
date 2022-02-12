@@ -17,7 +17,7 @@ void ArcballCam::update(VeCamera& cam, float deltaTime) {
 
     // Zoom in/out.
     glm::vec3 newPosition = cam.getPosition();
-    if (veInput.getKey(GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
+    if (veInput.getKey(keys.zoomIn) == GLFW_PRESS) {
         newPosition += (zoomSpeed * deltaTime * forwardDir);
         // Check that newPosition != target.
         glm::vec3 dstFromPivot = newPosition - target;
@@ -26,7 +26,7 @@ void ArcballCam::update(VeCamera& cam, float deltaTime) {
         }
     }
 
-    if (veInput.getKey(GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) {
+    if (veInput.getKey(keys.zoomOut) == GLFW_PRESS) {
         newPosition -= (zoomSpeed * deltaTime * forwardDir);
     }
 
