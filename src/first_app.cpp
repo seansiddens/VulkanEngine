@@ -1,5 +1,6 @@
 #include "first_app.hpp"
 
+#include "camera_controller.hpp"
 #include "movement_controller.hpp"
 #include "systems/point_light_system.hpp"
 #include "systems/simple_render_system.hpp"
@@ -23,14 +24,16 @@
 
 // TODO: Material abstraction?
 // TODO: Stuttering when fullscreen? (or just when changing sizes?)
+// TODO: Imgui integration
+// Camera controller abstraction as camera member.
 
 namespace ve {
 
 struct GlobalUbo {
     glm::mat4 projection{1.f};
     glm::mat4 view{1.f};
-    glm::vec4 ambientLightColor{1.f, 1.f, 1.f, .01f};  // w is light intensity
-    glm::vec3 lightPosition{0.f, -3.f, 0.0}; 
+    glm::vec4 ambientLightColor{1.f, 1.f, 1.f, .1f};  // w is light intensity
+    glm::vec3 lightPosition{0.f, -3.f, 0.0};
     alignas(16) glm::vec4 lightColor{1.f, 1.f, 1.f, 5.f};  // w is light intensity
 };
 
@@ -46,7 +49,7 @@ FirstApp::FirstApp() {
 
 void FirstApp::run() {
     // Set clear color.
-    veRenderer.setClearColor({0.7, 0.7, 0.9, 1.f});
+    veRenderer.setClearColor({0.2, 0.2, 0.6, 1.f});
 
     // Create uniform buffer objects.
     std::vector<std::unique_ptr<VeBuffer>> uboBuffers(VeSwapChain::MAX_FRAMES_IN_FLIGHT);
@@ -85,12 +88,13 @@ void FirstApp::run() {
         veDevice, veRenderer.getSwapChainRenderPass(), globalSetLayout->getDescriptorSetLayout()};
 
     // Initialize the camera and camera controller.
-    VeCamera camera(veInput, glm::vec3(0.f, -1.f, -3.f), glm::vec3(0.f, -1.f, 0.f));
+    VeCamera camera(glm::vec3(0.f, -1.f, -3.f), glm::vec3(0.f, -1.f, 0.f));
+    ArcballCam arcCam(veInput);
 
     // Initialize the current time.
     auto currentTime = std::chrono::high_resolution_clock::now();
-    float totalTime = 0; // Total elapsed time of the application.
-    uint64_t frame = 0; // Current frame.
+    float totalTime = 0;  // Total elapsed time of the application.
+    uint64_t frame = 0;   // Current frame.
 
     // Start game loop.
     while (!veWindow.shouldClose()) {
@@ -107,7 +111,7 @@ void FirstApp::run() {
         if (veInput.getKey(GLFW_KEY_ESCAPE) == GLFW_PRESS) break;
 
         // Update camera position.
-        camera.update(frameTime);
+        arcCam.update(camera, frameTime);
 
         auto aspect = veRenderer.getAspectRatio();
         camera.setPerspectiveProjection(glm::radians(50.f), aspect, .1, 100);
@@ -149,12 +153,17 @@ void FirstApp::run() {
 }
 
 void FirstApp::loadGameObjects() {
+    // Load textures.
     std::shared_ptr<VeTexture> statueTexture =
         VeTexture::createTextureFromFile(veDevice, "textures/statue.jpg");
 
     std::shared_ptr<VeTexture> vikingTexture =
         VeTexture::createTextureFromFile(veDevice, "textures/viking_room.png");
 
+    std::shared_ptr<VeTexture> woodTexture =
+        VeTexture::createTextureFromFile(veDevice, "textures/wood.png");
+
+    // Load models and attach them to game objects.
     std::shared_ptr<VeModel> smoothVaseModel =
         VeModel::createModelFromFile(veDevice, "models/smooth_vase.obj");
     auto vaseObj = VeGameObject::createGameObject();
@@ -168,14 +177,17 @@ void FirstApp::loadGameObjects() {
     auto cubeObj = VeGameObject::createGameObject();
     cubeObj.model = cubeModel;
     cubeObj.texture = statueTexture;
-    cubeObj.transform.translation = {0.f, -1.f, 0.f};
-    cubeObj.transform.scale = {0.1f, 0.1f, 0.1f};
+    cubeObj.transform.translation = {0.f, -0.5f, 0.f};
+    cubeObj.transform.scale = {0.5f, 0.5f, 0.5f};
     gameObjects.emplace(cubeObj.getId(), std::move(cubeObj));
 
-    //    std::shared_ptr<VeModel> quadModel = VeModel::createModelFromFile(veDevice,
-    //    "models/quad.obj"); auto floorObj = VeGameObject::createGameObject(); floorObj.model =
-    //    quadModel; floorObj.transform.translation = {0.f, 0.01f, 0.f}; floorObj.transform.scale =
-    //    {5.f, 1.f, 5.f}; gameObjects.emplace(floorObj.getId(), std::move(floorObj));
+    std::shared_ptr<VeModel> quadModel = VeModel::createModelFromFile(veDevice, "models/quad.obj");
+    auto floorObj = VeGameObject::createGameObject();
+    floorObj.model = quadModel;
+    floorObj.transform.translation = {0.f, 0.01f, 0.f};
+    floorObj.transform.scale = {10.f, 1.f, 10.f};
+    floorObj.texture = woodTexture;
+    gameObjects.emplace(floorObj.getId(), std::move(floorObj));
 
     // std::shared_ptr<VeModel> vikingModel =
     //     VeModel::createModelFromFile(veDevice, "models/viking_room.obj");
