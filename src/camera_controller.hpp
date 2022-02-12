@@ -19,7 +19,7 @@ class CameraController {
 
 class ArcballCam : public CameraController {
    public:
-    ArcballCam(VeInput &input, glm::vec3 _target = glm::vec3{0.f, 0.f, 0.f}, float _zoomSpeed = 5.f);
+    ArcballCam(VeInput &input, glm::vec3 _target = glm::vec3{0.f, 0.f, 0.f}, float _zoomSpeed = 3.f);
 
     void update(VeCamera &cam, float deltaTime);
 

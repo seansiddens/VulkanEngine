@@ -89,7 +89,7 @@ void FirstApp::run() {
 
     // Initialize the camera and camera controller.
     VeCamera camera(glm::vec3(0.f, -1.f, -3.f), glm::vec3(0.f, -1.f, 0.f));
-    ArcballCam arcCam(veInput);
+    ArcballCam arcCam(veInput, glm::vec3(0.f, -1.f, 0.f));
 
     // Initialize the current time.
     auto currentTime = std::chrono::high_resolution_clock::now();

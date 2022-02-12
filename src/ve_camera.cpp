@@ -6,13 +6,13 @@
 
 namespace ve {
 
-VeCamera::VeCamera(glm::vec3 _position, glm::vec3 target) : position{_position} {
+VeCamera::VeCamera(glm::vec3 _position, glm::vec3 target) {
     // Check that the target and position are not the same value.
     assert(glm::dot(target - _position, target - _position) >
                std::numeric_limits<float>::epsilon() &&
            "Camera target must not be the same as position!");
 
-    setViewTarget(position, target);
+    setViewTarget(_position, target);
 }
 
 void VeCamera::setOrthographicProjection(
@@ -66,7 +66,8 @@ void VeCamera::setViewTarget(glm::vec3 position, glm::vec3 target, glm::vec3 up)
     setViewDirection(position, target - position, up);
 }
 
-void VeCamera::setViewYXZ(glm::vec3 position, glm::vec3 rotation) {
+void VeCamera::setViewYXZ(glm::vec3 _position, glm::vec3 rotation) {
+    position = _position;
     // View matrix transforms the camera to the origin and re-orients to face the +Z direction.
     // Move back to origin, then re-orient.
     // View = inv(cam.rotationMat) * -cam.translate
@@ -94,49 +95,5 @@ void VeCamera::setViewYXZ(glm::vec3 position, glm::vec3 rotation) {
     viewMatrix[3][1] = -glm::dot(v, position);
     viewMatrix[3][2] = -glm::dot(w, position);
 }
-
-// void VeCamera::update(float deltaTime) {
-//     controller->update(this, deltaTime);
-    // // A movement from left to right = 2 * PI = 360 deg
-    // float angleScaleX = (2.f * M_PI / static_cast<float>(veInput.getWindow().getExtent().width));
-    // // A movement from top to bottom = PI = 180 deg.
-    // float angleScaleY = (M_PI / static_cast<float>(veInput.getWindow().getExtent().height));
-
-    // forwardDir = glm::normalize(pivot - position);
-
-    // // Zoom in/out.
-    // glm::vec3 newPosition = position;
-    // if (veInput.getKey(GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
-    //     newPosition += (zoomSpeed * deltaTime * forwardDir);
-    //     // Check that newPosition != target.
-    //     glm::vec3 dstFromPivot = newPosition - pivot;
-    //     if (glm::dot(dstFromPivot, dstFromPivot) < std::numeric_limits<float>::epsilon()) {
-    //         newPosition = position;  // Undo translation.
-    //     }
-    // }
-
-    // if (veInput.getKey(GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) {
-    //     newPosition -= (zoomSpeed * deltaTime * forwardDir);
-    // }
-
-    // // Amount to rotate.
-    // float deltaAngleX = (veInput.getDeltaX() * -1.0) * angleScaleX;
-    // float deltaAngleY = (veInput.getDeltaY() * -1.0) * angleScaleY;
-
-    // if (veInput.getMouseButton(GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
-    //     // Rotate camera object around pivot point about the Y axis.
-    //     glm::mat4 rotMatrixX(1.f);
-    //     rotMatrixX = glm::rotate(rotMatrixX, deltaAngleX, glm::vec3{0.f, -1.f, 0.f});
-    //     newPosition = rotMatrixX * glm::vec4(newPosition - pivot, 1.f) + glm::vec4(pivot, 1.f);
-
-    //     // Rotate camera around pivot about the camera object's right dir.
-    //     glm::mat4 rotationMatrixY(1.0f);
-    //     rotationMatrixY = glm::rotate(rotationMatrixY, deltaAngleY, getRightDir());
-    //     newPosition = rotationMatrixY * glm::vec4(newPosition - pivot, 1.f) +
-    //     glm::vec4(pivot, 1.f);
-    // }
-
-    // setViewTarget(newPosition, pivot);
-// }
 
 }  // namespace ve
