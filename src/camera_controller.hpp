@@ -17,6 +17,7 @@ class CameraController {
     VeInput &veInput;
 };
 
+// Arcball camera pivots around a central target using the mouse.
 class ArcballCam : public CameraController {
    public:
     // Mappings between keybindings and GLFW keycodes.
@@ -34,6 +35,30 @@ class ArcballCam : public CameraController {
     KeyMappings keys{};
     float zoomSpeed;
     glm::vec3 target;
+};
+
+class KeyboardCameraController : public CameraController {
+   public:
+    struct KeyMappings {
+        int moveLeft = GLFW_KEY_A;
+        int moveRight = GLFW_KEY_D;
+        int moveForward = GLFW_KEY_W;
+        int moveBackward = GLFW_KEY_S;
+        int moveUp = GLFW_KEY_LEFT_SHIFT;
+        int moveDown = GLFW_KEY_LEFT_CONTROL;
+        int lookLeft = GLFW_KEY_LEFT;
+        int lookRight = GLFW_KEY_RIGHT;
+        int lookUp = GLFW_KEY_UP;
+        int lookDown = GLFW_KEY_DOWN;
+    };
+
+    KeyboardCameraController(VeInput &input, float _moveSpeed = 3.5f, float _lookSpeed = 2.0f);
+
+    void update(VeCamera &cam, float deltaTime);
+
+    KeyMappings keys{};
+    float moveSpeed;
+    float lookSpeed;
 };
 
 }  // namespace ve
