@@ -1,5 +1,6 @@
 #include "camera_controller.hpp"
 
+#include <cmath>
 #include <glm/ext/matrix_transform.hpp>
 #include <iostream>
 
@@ -71,7 +72,8 @@ void KeyboardCameraController::update(VeCamera& cam, float deltaTime) {
     //
     //    // Limit pitch value between about +/- 85 degrees.
     //    gameObject.transform.rotation.x = glm::clamp(gameObject.transform.rotation.x,
-    //    -1.5f, 1.5f); gameObject.transform.rotation.y =
+    //    -1.5f, 1.5f);
+    //    gameObject.transform.rotation.y =
     //        glm::mod(gameObject.transform.rotation.y, glm::two_pi<float>());
     //
     //    float yaw = gameObject.transform.rotation.y;
@@ -91,6 +93,54 @@ void KeyboardCameraController::update(VeCamera& cam, float deltaTime) {
     //    if (glm::dot(moveDir, moveDir) > std::numeric_limits<float>::epsilon()) {
     //        gameObject.transform.translation += moveSpeed * dt * glm::normalize(moveDir);
     //    }
+}
+
+MouseCameraController::MouseCameraController(VeInput& input, float _moveSpeed, float _lookSpeed)
+    : CameraController(input), moveSpeed{_moveSpeed}, lookSpeed{_lookSpeed} {
+
+    glfwSetInputMode(input.getWindow().getGLFWWindow(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+}
+
+void MouseCameraController::update(VeCamera& cam, float deltaTime) {
+    m_yaw -= veInput.getDeltaX() * deltaTime * lookSpeed;
+    m_pitch += veInput.getDeltaY() * deltaTime * lookSpeed;
+
+    // Clamp pitch between +/- 85 degrees.
+    m_pitch = glm::clamp(m_pitch, -1.5f, 1.5f);
+
+    // Calulate the new direction vector based off of pitch and yaw.
+    glm::vec3 direction{};
+    direction.x = std::cos(m_yaw) * std::cos(m_pitch);
+    direction.y = std::sin(m_pitch);
+    direction.z = std::sin(m_yaw) * std::cos(m_pitch);
+
+    // Update camera w/ new direction.
+    cam.setViewDirection(cam.getPosition(), direction);
+
+
+    glm::vec3 camPos = cam.getPosition();
+    // Move camera.
+    if (veInput.getKey(keys.moveForward)) {
+        camPos += cam.getViewDir() * moveSpeed * deltaTime;
+    }
+    if (veInput.getKey(keys.moveBackward)) {
+        camPos -= cam.getViewDir() * moveSpeed * deltaTime;
+    }
+    if (veInput.getKey(keys.moveLeft)) {
+        camPos -= cam.getRightDir() * moveSpeed * deltaTime;
+    }
+    if (veInput.getKey(keys.moveRight)) {
+        camPos += cam.getRightDir() * moveSpeed * deltaTime;
+    }
+    if (veInput.getKey(keys.moveUp)) {
+        camPos += cam.getUpDir() * moveSpeed * deltaTime;
+    }
+    if (veInput.getKey(keys.moveDown)) {
+        camPos -= cam.getUpDir() * moveSpeed * deltaTime;
+    }
+
+    // Update cam w/ new position.
+    cam.setViewDirection(camPos, direction);
 }
 
 }  // namespace ve

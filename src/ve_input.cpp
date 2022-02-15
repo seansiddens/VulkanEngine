@@ -5,6 +5,7 @@
 namespace ve {
 
 VeInput::VeInput(VeWindow &window) : veWindow{window} {
+
     // Set user pointer to point to this instance.
     glfwSetWindowUserPointer(veWindow.getGLFWWindow(), this);
 

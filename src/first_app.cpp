@@ -91,6 +91,8 @@ void FirstApp::run() {
     // Initialize the camera and camera controller.
     VeCamera camera(glm::vec3(0.f, 0.f, -3.f), glm::vec3(0.f, 0.f, 0.f));
     ArcballCam arcCam(veInput, glm::vec3(0.f, 0.f, 0.f));
+    MouseCameraController mouseCam(veInput);
+
 
     // Initialize the current time.
     auto currentTime = std::chrono::high_resolution_clock::now();
@@ -112,7 +114,8 @@ void FirstApp::run() {
         if (veInput.getKey(GLFW_KEY_ESCAPE)) break;
 
         // Update camera position.
-        arcCam.update(camera, frameTime);
+//        arcCam.update(camera, frameTime);
+        mouseCam.update(camera, frameTime);
 
         auto aspect = veRenderer.getAspectRatio();
         camera.setPerspectiveProjection(glm::radians(50.f), aspect, .1, 100);
@@ -172,6 +175,7 @@ void FirstApp::loadGameObjects() {
     vaseObj.transform.translation = {0.f, -1.0f, 0.f};
     vaseObj.transform.scale = {2.0f, 2.0f, 2.0f};
     vaseObj.texture = woodTexture;
+    vaseObj.transform.rotation = {M_PI / 2, 0.f, 0.f};
     gameObjects.emplace(vaseObj.getId(), std::move(vaseObj));
 
     std::shared_ptr<VeModel> cubeModel = VeModel::createModelFromFile(veDevice, "models/cube.obj");

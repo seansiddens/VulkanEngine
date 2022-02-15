@@ -60,4 +60,30 @@ class KeyboardCameraController : public CameraController {
     float lookSpeed;
 };
 
+class MouseCameraController : public CameraController {
+   public:
+    struct KeyMappings {
+        int moveLeft = GLFW_KEY_A;
+        int moveRight = GLFW_KEY_D;
+        int moveForward = GLFW_KEY_W;
+        int moveBackward = GLFW_KEY_S;
+        int moveUp = GLFW_KEY_LEFT_SHIFT;
+        int moveDown = GLFW_KEY_LEFT_CONTROL;
+    };
+
+    explicit MouseCameraController(VeInput &input, float _moveSpeed = 3.5f, float _lookSpeed = 0.1f);
+
+    void update(VeCamera &cam, float deltaTime) override;
+
+    KeyMappings keys{};
+    float moveSpeed;
+    float lookSpeed;
+
+   private:
+    // Initialize values to face +Z.
+    float m_pitch{0.f};
+    float m_yaw{M_PI / 2.f};
+
+};
+
 }  // namespace ve
