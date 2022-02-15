@@ -3,3 +3,5 @@ shaders/*.spv
 build/
 .idea/
 cmake-build-debug/
+.env.cmake
+

@@ -48,7 +48,7 @@ class SimpleRenderSystem {
 
     // Each game object has a descriptor set.
     // Map from game object ID to descriptor set.
-    std::unordered_map<id_t, VkDescriptorSet> objectDescriptorSets;
+    std::unordered_map<VeGameObject::id_t, VkDescriptorSet> objectDescriptorSets;
 
     // Sampler for game object's textures.
     VkSampler textureSampler{};

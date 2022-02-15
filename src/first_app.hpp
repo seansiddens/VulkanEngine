@@ -28,9 +28,6 @@ class FirstApp {
 
    private:
     void loadGameObjects();
-    void createTextureImage();
-    void createTextureImageView();
-    void createTextureSampler();
 
     // NOTE: These classes need to be initialized in this order.
     VeWindow veWindow{WIDTH, HEIGHT, "Hello Vulkan!"};

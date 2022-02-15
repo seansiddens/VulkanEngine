@@ -16,8 +16,8 @@ struct TransformComponent {
     glm::vec3 scale{1.f, 1.f, 1.f};
     glm::vec3 rotation{};
 
-    glm::mat4 mat4();
-    glm::mat3 normalMatrix();
+    [[nodiscard]] glm::mat4 mat4() const;
+    [[nodiscard]] glm::mat3 normalMatrix() const;
 };
 
 class VeGameObject {
@@ -36,7 +36,7 @@ class VeGameObject {
     VeGameObject(VeGameObject &&) = default;
     VeGameObject &operator=(VeGameObject &&) = default;
 
-    id_t getId() const { return id; }
+    [[nodiscard]] id_t getId() const { return id; }
 
     std::shared_ptr<VeModel> model{};
     glm::vec3 color{};
@@ -44,7 +44,7 @@ class VeGameObject {
     std::shared_ptr<VeTexture> texture{};
 
    private:
-    VeGameObject(id_t objId) : id{objId} {}
+    explicit VeGameObject(id_t objId) : id{objId} {}
 
     id_t id;
 };

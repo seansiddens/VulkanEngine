@@ -5,7 +5,7 @@ namespace ve {
 // Matrix corrsponds to Translate * Ry * Rx * Rz * Scale
 // Rotations correspond to Tait-bryan angles of Y(1), X(2), Z(3)
 // https://en.wikipedia.org/wiki/Euler_angles#Rotation_matrix
-glm::mat4 TransformComponent::mat4() {
+glm::mat4 TransformComponent::mat4() const {
     const float c3 = glm::cos(rotation.z);
     const float s3 = glm::sin(rotation.z);
     const float c2 = glm::cos(rotation.x);
@@ -33,7 +33,7 @@ glm::mat4 TransformComponent::mat4() {
                      {translation.x, translation.y, translation.z, 1.0f}};
 }
 
-glm::mat3 TransformComponent::normalMatrix() {
+glm::mat3 TransformComponent::normalMatrix() const {
     const float c3 = glm::cos(rotation.z);
     const float s3 = glm::sin(rotation.z);
     const float c2 = glm::cos(rotation.x);

@@ -38,6 +38,8 @@ void VeInput::setKey(int key, int action) { keyState[key] = action; }
 
 void VeInput::setMouseButton(int button, int action) { mouseState[button] = action; }
 
+// TODO: IDK if this really does anything because the poll events function will overwrite position
+//       based on the cursor's position in the window.
 void VeInput::setMousePos(double xPos, double yPos) {
     // Save the previous mouse position.
     lastMouseX = mouseX;
@@ -49,29 +51,29 @@ void VeInput::setMousePos(double xPos, double yPos) {
 }
 
 // Getters.
-int VeInput::getKey(int key) {
+bool VeInput::getKey(int key) {
     if (keyState.count(key) > 0) {
-        return keyState[key];
+        return (keyState[key] == GLFW_PRESS || keyState[key] == GLFW_REPEAT);
     }
 
-    return GLFW_KEY_UNKNOWN;
+    return false;
 }
 
-int VeInput::getMouseButton(int button) {
+bool VeInput::getMouseButton(int button) {
     if (mouseState.count(button) > 0) {
-        return mouseState[button];
+        return mouseState[button] == GLFW_PRESS;
     }
 
-    return GLFW_KEY_UNKNOWN;
+    return false;
 }
 
-double VeInput::getMouseX() { return mouseX; }
+double VeInput::getMouseX() const { return mouseX; }
 
-double VeInput::getMouseY() { return mouseY; }
+double VeInput::getMouseY() const { return mouseY; }
 
-double VeInput::getDeltaX() { return deltaX; }
+double VeInput::getDeltaX() const { return deltaX; }
 
-double VeInput::getDeltaY() { return deltaY; }
+double VeInput::getDeltaY() const { return deltaY; }
 
 // Input callback functions.
 void VeInput::keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods) {

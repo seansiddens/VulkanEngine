@@ -1,6 +1,5 @@
 #pragma once
 
-#include <glm/ext/matrix_transform.hpp>
 
 #include "ve_camera.hpp"
 #include "ve_input.hpp"
@@ -9,7 +8,7 @@ namespace ve {
 
 class CameraController {
    public:
-    CameraController(VeInput &input) : veInput{input} {}
+    explicit CameraController(VeInput &input) : veInput{input} {}
 
     virtual void update(VeCamera &cam, float deltaTime) = 0;
 
@@ -26,11 +25,11 @@ class ArcballCam : public CameraController {
         int zoomOut = GLFW_KEY_LEFT_CONTROL;
     };
 
-    ArcballCam(VeInput &input,
+    explicit ArcballCam(VeInput &input,
                glm::vec3 _target = glm::vec3{0.f, 0.f, 0.f},
                float _zoomSpeed = 3.f);
 
-    void update(VeCamera &cam, float deltaTime);
+    void update(VeCamera &cam, float deltaTime) override;
 
     KeyMappings keys{};
     float zoomSpeed;
@@ -52,9 +51,9 @@ class KeyboardCameraController : public CameraController {
         int lookDown = GLFW_KEY_DOWN;
     };
 
-    KeyboardCameraController(VeInput &input, float _moveSpeed = 3.5f, float _lookSpeed = 2.0f);
+    explicit KeyboardCameraController(VeInput &input, float _moveSpeed = 3.5f, float _lookSpeed = 2.0f);
 
-    void update(VeCamera &cam, float deltaTime);
+    void update(VeCamera &cam, float deltaTime) override;
 
     KeyMappings keys{};
     float moveSpeed;

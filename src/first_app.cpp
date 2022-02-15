@@ -11,6 +11,7 @@
 // libs
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
+
 #include <glm/glm.hpp>
 #include <glm/gtc/constants.hpp>
 
@@ -23,9 +24,9 @@
 #include <stdexcept>
 
 // TODO: Material abstraction?
-// TODO: Stuttering when fullscreen? (or just when changing sizes?)
+// TODO: Code stuttering after window is changed.
 // TODO: Imgui integration
-// Camera controller abstraction as camera member.
+// TODO: Keyboard camera controller and FPS camera controller.
 
 namespace ve {
 
@@ -53,13 +54,13 @@ void FirstApp::run() {
 
     // Create uniform buffer objects.
     std::vector<std::unique_ptr<VeBuffer>> uboBuffers(VeSwapChain::MAX_FRAMES_IN_FLIGHT);
-    for (int i = 0; i < uboBuffers.size(); i++) {
-        uboBuffers[i] = std::make_unique<VeBuffer>(veDevice,
-                                                   sizeof(GlobalUbo),
-                                                   1,
-                                                   VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-                                                   VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
-        uboBuffers[i]->map();
+    for (auto &uboBuffer : uboBuffers) {
+        uboBuffer = std::make_unique<VeBuffer>(veDevice,
+                                               sizeof(GlobalUbo),
+                                               1,
+                                               VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                                               VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+        uboBuffer->map();
     }
 
     // Highest level set common to all of our shaders.
@@ -88,8 +89,8 @@ void FirstApp::run() {
         veDevice, veRenderer.getSwapChainRenderPass(), globalSetLayout->getDescriptorSetLayout()};
 
     // Initialize the camera and camera controller.
-    VeCamera camera(glm::vec3(0.f, -1.f, -3.f), glm::vec3(0.f, -1.f, 0.f));
-    ArcballCam arcCam(veInput, glm::vec3(0.f, -1.f, 0.f));
+    VeCamera camera(glm::vec3(0.f, 0.f, -3.f), glm::vec3(0.f, 0.f, 0.f));
+    ArcballCam arcCam(veInput, glm::vec3(0.f, 0.f, 0.f));
 
     // Initialize the current time.
     auto currentTime = std::chrono::high_resolution_clock::now();
@@ -108,7 +109,7 @@ void FirstApp::run() {
 
         // Poll events.
         veInput.pollEvents();
-        if (veInput.getKey(GLFW_KEY_ESCAPE) == GLFW_PRESS) break;
+        if (veInput.getKey(GLFW_KEY_ESCAPE)) break;
 
         // Update camera position.
         arcCam.update(camera, frameTime);
@@ -169,8 +170,8 @@ void FirstApp::loadGameObjects() {
     auto vaseObj = VeGameObject::createGameObject();
     vaseObj.model = smoothVaseModel;
     vaseObj.transform.translation = {0.f, -1.0f, 0.f};
-    vaseObj.transform.scale = {2.5f, 2.0f, 2.0f};
-    vaseObj.texture = statueTexture;
+    vaseObj.transform.scale = {2.0f, 2.0f, 2.0f};
+    vaseObj.texture = woodTexture;
     gameObjects.emplace(vaseObj.getId(), std::move(vaseObj));
 
     std::shared_ptr<VeModel> cubeModel = VeModel::createModelFromFile(veDevice, "models/cube.obj");
@@ -180,7 +181,7 @@ void FirstApp::loadGameObjects() {
     cubeObj.transform.translation = {0.f, -0.5f, 0.f};
     cubeObj.transform.scale = {0.5f, 0.5f, 0.5f};
     gameObjects.emplace(cubeObj.getId(), std::move(cubeObj));
-
+//
     std::shared_ptr<VeModel> quadModel = VeModel::createModelFromFile(veDevice, "models/quad.obj");
     auto floorObj = VeGameObject::createGameObject();
     floorObj.model = quadModel;

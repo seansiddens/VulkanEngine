@@ -11,7 +11,7 @@ namespace ve {
 
 class VeInput {
    public:
-    VeInput(VeWindow &window);
+    explicit VeInput(VeWindow &window);
 
     // This function should be called once every frame.
     void pollEvents();
@@ -20,12 +20,15 @@ class VeInput {
     void setMouseButton(int button, int action);
     void setMousePos(double xPos, double yPos);
 
-    int getKey(int key);
-    int getMouseButton(int button);
-    double getMouseX();
-    double getMouseY();
-    double getDeltaX();
-    double getDeltaY();
+    // Returns whether a given key or mouse button is down.
+    bool getKey(int key);
+    bool getMouseButton(int button);
+
+    // Get mouse position and change in position.
+    double getMouseX() const;
+    double getMouseY() const;
+    double getDeltaX() const;
+    double getDeltaY() const;
 
     VeWindow &getWindow() const { return veWindow; }
 
@@ -37,7 +40,7 @@ class VeInput {
     // Mouse positions are measured in screen coordinates relative to the top-left corner
     // of the window content area (+X left, +Y down).
     // Current X and Y position of the mouse.
-    double mouseX, mouseY;
+    double mouseX{}, mouseY{};
 
     // Cursor position of when it was last polled.
     double lastMouseX;

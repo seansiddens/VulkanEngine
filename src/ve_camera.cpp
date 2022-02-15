@@ -1,6 +1,7 @@
 #include "ve_camera.hpp"
 
 #include <cassert>
+#include <cmath>
 #include <iostream>
 #include <limits>
 
@@ -28,7 +29,7 @@ void VeCamera::setOrthographicProjection(
 
 void VeCamera::setPerspectiveProjection(float fovy, float aspect, float near, float far) {
     assert(glm::abs(aspect - std::numeric_limits<float>::epsilon()) > 0.0f);
-    const float tanHalfFovy = tan(fovy / 2.f);
+    const float tanHalfFovy = std::tan(fovy / 2.f);
     projectionMatrix = glm::mat4{0.0f};
     projectionMatrix[0][0] = 1.f / (aspect * tanHalfFovy);
     projectionMatrix[1][1] = 1.f / (tanHalfFovy);
@@ -37,10 +38,13 @@ void VeCamera::setPerspectiveProjection(float fovy, float aspect, float near, fl
     projectionMatrix[3][2] = -(far * near) / (far - near);
 }
 
-void VeCamera::setViewDirection(glm::vec3 _position, glm::vec3 direction, glm::vec3 up) {
+void VeCamera::setViewDirection(glm::vec3 _position, glm::vec3 direction, glm::vec3 _up) {
     assert(glm::dot(direction, direction) > std::numeric_limits<float>::epsilon() &&
            "Direction must be a non-zero vector");
+
+    // Make sure to keep track of member variables when modifying the view matrix.
     position = _position;
+    up = _up;
 
     // Construct an orthonormal basis.
     const glm::vec3 w{glm::normalize(direction)};
@@ -62,8 +66,8 @@ void VeCamera::setViewDirection(glm::vec3 _position, glm::vec3 direction, glm::v
     viewMatrix[3][2] = -glm::dot(w, position);
 }
 
-void VeCamera::setViewTarget(glm::vec3 position, glm::vec3 target, glm::vec3 up) {
-    setViewDirection(position, target - position, up);
+void VeCamera::setViewTarget(glm::vec3 _position, glm::vec3 target, glm::vec3 _up) {
+    setViewDirection(_position, target - _position, _up);
 }
 
 void VeCamera::setViewYXZ(glm::vec3 _position, glm::vec3 rotation) {
