@@ -20,6 +20,13 @@ struct TransformComponent {
     [[nodiscard]] glm::mat3 normalMatrix() const;
 };
 
+struct Material {
+    glm::vec3 ambient;
+    alignas(16) glm::vec3 diffuse;
+    alignas(16) glm::vec3 specular;
+    alignas(16) float shininess;
+};
+
 class VeGameObject {
    public:
     using id_t = unsigned int;
@@ -42,6 +49,7 @@ class VeGameObject {
     glm::vec3 color{};
     TransformComponent transform{};
     std::shared_ptr<VeTexture> texture{};
+    Material material{};
 
    private:
     explicit VeGameObject(id_t objId) : id{objId} {}

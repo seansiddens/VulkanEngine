@@ -52,6 +52,9 @@ class SimpleRenderSystem {
 
     // Sampler for game object's textures.
     VkSampler textureSampler{};
+
+    // UBO's for object materials.
+    std::vector<std::unique_ptr<VeBuffer>> materialUBOs;
 };
 
 }  // namespace ve

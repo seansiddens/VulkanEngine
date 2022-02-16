@@ -28,7 +28,6 @@ SimpleRenderSystem::SimpleRenderSystem(VeDevice& device,
                                        VkDescriptorSetLayout globalSetLayout,
                                        VeGameObject::Map& gameObjects)
     : veDevice{device} {
-
     textureSampler = VeTexture::createTextureSampler(veDevice);
 
     numGameObjects = static_cast<int>(gameObjects.size());
@@ -39,32 +38,53 @@ SimpleRenderSystem::SimpleRenderSystem(VeDevice& device,
     simplePool = VeDescriptorPool::Builder(veDevice)
                      .setMaxSets(numGameObjects)
                      .addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, numGameObjects)
+                     .addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, numGameObjects)
                      .build();
 
     // Create descriptor layout.
     simpleLayout =
         VeDescriptorSetLayout::Builder(veDevice)
             .addBinding(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
+            .addBinding(1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT)
             .build();
 
     // Create descriptor set for each game object
     for (const auto& [id, obj] : gameObjects) {
-            VkDescriptorSet descriptorSet{};
+        VkDescriptorSet descriptorSet{};
 
-            // Write material info.
-            VkDescriptorImageInfo imageInfo{};
-            imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-            imageInfo.imageView = obj.texture->imageView();
-            imageInfo.sampler = textureSampler;
+        // Write material info.
+        VkDescriptorImageInfo imageInfo{};
+        imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        imageInfo.imageView = obj.texture->imageView();
+        imageInfo.sampler = textureSampler;
 
-            // Allocate and write descriptor set.
-            VeDescriptorWriter(*simpleLayout, *simplePool)
-                .writeImage(0, &imageInfo)
-                .build(descriptorSet);
+        // Allocate material UBO.
+        auto ubo = std::make_unique<VeBuffer>(veDevice,
+                                              sizeof(Material),
+                                              1,
+                                              VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                                              VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+        // Write material info to the UBO.
+        ubo->map();
+        Material mat{};
+        mat.ambient = obj.material.ambient;
+        mat.diffuse = obj.material.diffuse;
+        mat.specular = obj.material.specular;
+        mat.shininess = obj.material.shininess;
+        ubo->writeToBuffer(&mat);
+        ubo->flush();
+        auto bufferInfo = ubo->descriptorInfo();
+        materialUBOs.push_back(std::move(ubo));
 
-            // Insert into our map.
-            objectDescriptorSets.emplace(id, descriptorSet);
-        }
+        // Allocate and write descriptor set.
+        VeDescriptorWriter(*simpleLayout, *simplePool)
+            .writeImage(0, &imageInfo)
+            .writeBuffer(1, &bufferInfo)
+            .build(descriptorSet);
+
+        // Insert into our map.
+        objectDescriptorSets.emplace(id, descriptorSet);
+    }
 
     std::cout << "# of object descriptor sets: " << objectDescriptorSets.size();
 
@@ -105,10 +125,8 @@ void SimpleRenderSystem::createPipeline(VkRenderPass renderPass) {
     VePipeline::defaultPipelineConfigInfo(pipelineConfig);
     pipelineConfig.renderPass = renderPass;
     pipelineConfig.pipelineLayout = pipelineLayout;
-    vePipeline = std::make_unique<VePipeline>(veDevice,
-                                              "shaders/lit_mat.vert.spv",
-                                              "shaders/lit_mat.frag.spv",
-                                              pipelineConfig);
+    vePipeline = std::make_unique<VePipeline>(
+        veDevice, "shaders/lit_mat.vert.spv", "shaders/lit_mat.frag.spv", pipelineConfig);
 }
 
 void SimpleRenderSystem::renderGameObjects(FrameInfo& frameInfo) {

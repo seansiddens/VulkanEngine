@@ -33,9 +33,9 @@ namespace ve {
 struct GlobalUbo {
     glm::mat4 projection{1.f};
     glm::mat4 view{1.f};
-    glm::vec4 ambientLightColor{1.f, 1.f, 1.f, .1f};  // w is light intensity
-    glm::vec3 lightPosition{0.f, -3.f, 0.0};
-    alignas(16) glm::vec4 lightColor{1.f, 1.f, 1.f, 5.f};  // w is light intensity
+    glm::vec4 ambientLightColor{1.f, 1.f, 1.f, 0.5f};  // w is light intensity
+    glm::vec3 lightPosition{-3.f, -3.f, 2.0};
+    alignas(16) glm::vec4 lightColor{1.f, 1.f, 1.f, 3.f};  // w is light intensity
 };
 
 FirstApp::FirstApp() {
@@ -163,6 +163,12 @@ void FirstApp::run() {
 }
 
 void FirstApp::loadGameObjects() {
+    // Initialize materials
+    Material whiteRubber{
+        glm::vec3(0.05, 0.05, 0.05), glm::vec3(0.5, 0.5, 0.5), glm::vec3(0.7, 0.7, 0.7), 0.078125};
+    Material emerald{
+        {0.0215, 0.1745, 0.0215}, {0.07568, 0.61424, 0.07}, {0.633, 0.727811, 0.633}, 0.6};
+
     // Load textures.
     std::shared_ptr<VeTexture> statueTexture =
         VeTexture::createTextureFromFile(veDevice, "textures/statue.jpg");
@@ -181,7 +187,7 @@ void FirstApp::loadGameObjects() {
     vaseObj.transform.translation = {0.f, -1.0f, 0.f};
     vaseObj.transform.scale = {2.0f, 2.0f, 2.0f};
     vaseObj.texture = woodTexture;
-    vaseObj.transform.rotation = {M_PI / 2, 0.f, 0.f};
+    vaseObj.material = emerald;
     gameObjects.emplace(vaseObj.getId(), std::move(vaseObj));
 
     std::shared_ptr<VeModel> cubeModel = VeModel::createModelFromFile(veDevice, "models/cube.obj");
@@ -190,6 +196,7 @@ void FirstApp::loadGameObjects() {
     cubeObj.texture = statueTexture;
     cubeObj.transform.translation = {0.f, -0.5f, 0.f};
     cubeObj.transform.scale = {0.5f, 0.5f, 0.5f};
+    cubeObj.material = whiteRubber;
     gameObjects.emplace(cubeObj.getId(), std::move(cubeObj));
     //
     std::shared_ptr<VeModel> quadModel = VeModel::createModelFromFile(veDevice, "models/quad.obj");
@@ -198,6 +205,7 @@ void FirstApp::loadGameObjects() {
     floorObj.transform.translation = {0.f, 0.01f, 0.f};
     floorObj.transform.scale = {10.f, 1.f, 10.f};
     floorObj.texture = woodTexture;
+    floorObj.material = whiteRubber;
     gameObjects.emplace(floorObj.getId(), std::move(floorObj));
 
     // std::shared_ptr<VeModel> vikingModel =
