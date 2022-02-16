@@ -26,7 +26,7 @@
 // TODO: Material abstraction?
 // TODO: Code stuttering after window is changed.
 // TODO: Imgui integration
-// TODO: Keyboard camera controller and FPS camera controller.
+// TODO: Keyboard camera controller.
 
 namespace ve {
 

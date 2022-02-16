@@ -31,7 +31,7 @@ SimpleRenderSystem::SimpleRenderSystem(VeDevice& device,
 
     textureSampler = VeTexture::createTextureSampler(veDevice);
 
-    numGameObjects = gameObjects.size();
+    numGameObjects = static_cast<int>(gameObjects.size());
 
     std::cout << "Number of game objects: " << numGameObjects << "\n";
 
@@ -106,8 +106,8 @@ void SimpleRenderSystem::createPipeline(VkRenderPass renderPass) {
     pipelineConfig.renderPass = renderPass;
     pipelineConfig.pipelineLayout = pipelineLayout;
     vePipeline = std::make_unique<VePipeline>(veDevice,
-                                              "shaders/textured_lit_mat.vert.spv",
-                                              "shaders/textured_lit_mat.frag.spv",
+                                              "shaders/lit_mat.vert.spv",
+                                              "shaders/lit_mat.frag.spv",
                                               pipelineConfig);
 }
 

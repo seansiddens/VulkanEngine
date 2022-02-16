@@ -22,25 +22,29 @@ class VeSwapChain {
     VeSwapChain(const VeSwapChain &) = delete;
     VeSwapChain &operator=(const VeSwapChain &) = delete;
 
+    // A renderpass instance renders to the memory attachments contained within a framebuffer
+    // object. In this case the framebuffer attachments are owned by the swapchain, but this
+    // is not mandatory. Instead, we could render to a texture by attaching our own images
+    // which could then be sampled from a shader.
     VkFramebuffer getFrameBuffer(int index) { return swapChainFramebuffers[index]; }
     VkRenderPass getRenderPass() { return renderPass; }
     VkImageView getImageView(int index) { return swapChainImageViews[index]; }
     size_t imageCount() { return swapChainImages.size(); }  // Number of framebuffers.
     VkFormat getSwapChainImageFormat() { return swapChainImageFormat; }
     VkExtent2D getSwapChainExtent() { return swapChainExtent; }
-    uint32_t width() { return swapChainExtent.width; }
-    uint32_t height() { return swapChainExtent.height; }
+    [[nodiscard]] uint32_t width() const { return swapChainExtent.width; }
+    [[nodiscard]] uint32_t height() const { return swapChainExtent.height; }
 
-    float extentAspectRatio() {
+    [[nodiscard]] float extentAspectRatio() const {
         return static_cast<float>(swapChainExtent.width) /
                static_cast<float>(swapChainExtent.height);
     }
     VkFormat findDepthFormat();
 
     VkResult acquireNextImage(uint32_t *imageIndex);
-    VkResult submitCommandBuffers(const VkCommandBuffer *buffers, uint32_t *imageIndex);
+    VkResult submitCommandBuffers(const VkCommandBuffer *buffers, const uint32_t *imageIndex);
 
-    bool compareSwapFormats(const VeSwapChain &swapChain) const {
+    [[nodiscard]] bool compareSwapFormats(const VeSwapChain &swapChain) const {
         return swapChain.swapChainDepthFormat == swapChainDepthFormat &&
                swapChain.swapChainImageFormat == swapChainImageFormat;
     }

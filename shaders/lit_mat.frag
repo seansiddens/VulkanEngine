@@ -42,5 +42,5 @@ void main() {
     vec3 diffuseLight = lightColor * max(dot(normalize(fragNormalWorld), normalize(directionToLight)), 0);
 
     // Per-frag diffuse shading + texture sampling.
-    outColor = vec4(texture(texSampler_, fragTexCoord).rgb * (diffuseLight + ambientLightColor), 1.0);
+    outColor = vec4(fragColor * diffuseLight + ambientLightColor, 1.0);
 }

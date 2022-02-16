@@ -74,7 +74,6 @@ void VeCamera::setViewTarget(glm::vec3 position, glm::vec3 target, glm::vec3 up)
 void VeCamera::setViewYXZ(glm::vec3 position, glm::vec3 orientation) {
     // Update member variables.
     m_position = position;
-    m_orientation = orientation;
 
     // View matrix transforms the camera to the origin and re-orients to face the +Z direction.
     // Move back to origin, then re-orient.

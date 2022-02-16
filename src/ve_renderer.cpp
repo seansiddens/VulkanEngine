@@ -69,7 +69,7 @@ void VeRenderer::beginSwapChainRenderPass(VkCommandBuffer commandBuffer) {
     VkRenderPassBeginInfo renderPassInfo{};
     renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
     renderPassInfo.renderPass = veSwapChain->getRenderPass();
-    renderPassInfo.framebuffer = veSwapChain->getFrameBuffer(currentImageIndex);
+    renderPassInfo.framebuffer = veSwapChain->getFrameBuffer(static_cast<int>(currentImageIndex));
 
     renderPassInfo.renderArea.offset = {0, 0};
     renderPassInfo.renderArea.extent = veSwapChain->getSwapChainExtent();
@@ -96,7 +96,7 @@ void VeRenderer::beginSwapChainRenderPass(VkCommandBuffer commandBuffer) {
     vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
     vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 }
-void VeRenderer::endSwapChainRenderPass(VkCommandBuffer commandBuffer) {
+void VeRenderer::endSwapChainRenderPass(VkCommandBuffer commandBuffer) const {
     assert(isFrameStarted && "Can't call endSwapChainRenderPass() if frame not in progress!");
     assert(commandBuffer == getCurrentCommandBuffer() &&
            "Can't end render pass on command buffer from a different frame");
@@ -149,7 +149,7 @@ void VeRenderer::recreateSwapChain() {
         // Constructs a swap chain w/ a pointer to the previous one.
         veSwapChain = std::make_unique<VeSwapChain>(veDevice, extent, oldSwapChain);
 
-        if (!oldSwapChain->compareSwapFormats(*veSwapChain.get())) {
+        if (!oldSwapChain->compareSwapFormats(*veSwapChain)) {
             throw std::runtime_error("Swap chain image/depth format has changed!");
         }
     }

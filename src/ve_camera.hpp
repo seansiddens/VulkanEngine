@@ -43,7 +43,6 @@ class VeCamera {
 
     glm::vec3 m_up{};
     glm::vec3 m_position{};
-    glm::vec3 m_orientation{0.f}; // In radians.
 };
 
 }  // namespace ve

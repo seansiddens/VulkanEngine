@@ -41,7 +41,7 @@ class SimpleRenderSystem {
     int numGameObjects;
 
     std::unique_ptr<VePipeline> vePipeline;
-    VkPipelineLayout pipelineLayout;
+    VkPipelineLayout pipelineLayout{};
 
     std::unique_ptr<VeDescriptorPool> simplePool{};
     std::unique_ptr<VeDescriptorSetLayout> simpleLayout{};

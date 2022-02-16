@@ -7,6 +7,7 @@
 #include <limits>
 #include <set>
 #include <stdexcept>
+#include <utility>
 
 namespace ve {
 
@@ -19,7 +20,7 @@ VeSwapChain::VeSwapChain(VeDevice &deviceRef, VkExtent2D extent)
 VeSwapChain::VeSwapChain(VeDevice &deviceRef,
                          VkExtent2D extent,
                          std::shared_ptr<VeSwapChain> previous)
-    : veDevice{deviceRef}, windowExtent{extent}, oldSwapChain{previous} {
+    : veDevice{deviceRef}, windowExtent{extent}, oldSwapChain{std::move(previous)} {
     init();
 
     // Previous swap chain is only needed during initialization, so it can be cleaned up once it is
@@ -87,7 +88,7 @@ VkResult VeSwapChain::acquireNextImage(uint32_t *imageIndex) {
     return result;
 }
 
-VkResult VeSwapChain::submitCommandBuffers(const VkCommandBuffer *buffers, uint32_t *imageIndex) {
+VkResult VeSwapChain::submitCommandBuffers(const VkCommandBuffer *buffers, const uint32_t *imageIndex) {
     if (imagesInFlight[*imageIndex] != VK_NULL_HANDLE) {
         vkWaitForFences(veDevice.device(), 1, &imagesInFlight[*imageIndex], VK_TRUE, UINT64_MAX);
     }
@@ -183,7 +184,7 @@ void VeSwapChain::createSwapChain() {
         throw std::runtime_error("failed to create swap chain!");
     }
 
-    // we only specified a minimum number of images in the swap chain, so
+    // We only specified a minimum number of images in the swap chain, so
     // the implementation is allowed to create a swap chain with more.
     // That's why we'll first query the final number of images with
     // vkGetSwapchainImagesKHR, then resize the container and finally call
