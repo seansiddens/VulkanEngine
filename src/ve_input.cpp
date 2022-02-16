@@ -33,7 +33,7 @@ void VeInput::pollEvents() {
     deltaY = mouseY - lastMouseY;
 }
 
-// Setters.
+// Setters -----------------------------------------------------------------------------------------
 void VeInput::setKey(int key, int action) { keyState[key] = action; }
 
 void VeInput::setMouseButton(int button, int action) { mouseState[button] = action; }
@@ -54,7 +54,7 @@ void VeInput::setInputMode(int mode, int value) {
     glfwSetInputMode(veWindow.getGLFWWindow(), mode, value);
 }
 
-// Getters.
+// Getters -----------------------------------------------------------------------------------------
 bool VeInput::getKey(int key) {
     if (keyState.count(key) > 0) {
         return (keyState[key] == GLFW_PRESS || keyState[key] == GLFW_REPEAT);
@@ -79,6 +79,8 @@ double VeInput::getDeltaX() const { return deltaX; }
 
 double VeInput::getDeltaY() const { return deltaY; }
 
+
+// Callbacks ---------------------------------------------------------------------------------------
 // Input callback functions.
 void VeInput::keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods) {
     auto *input = reinterpret_cast<VeInput *>(glfwGetWindowUserPointer(window));

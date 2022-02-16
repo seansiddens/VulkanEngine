@@ -115,8 +115,12 @@ void FirstApp::run() {
         // Update camera position.
         //        arcCam.update(camera, frameTime);
 
-        if (veInput.getMouseButton(GLFW_MOUSE_BUTTON_1)) {
+        // Only update camera when mouse button is held.
+        if (veInput.getMouseButton(GLFW_MOUSE_BUTTON_LEFT)) {
+            veInput.setInputMode(GLFW_CURSOR, GLFW_CURSOR_DISABLED);
             mouseCam.update(camera, frameTime);
+        } else {
+            veInput.setInputMode(GLFW_CURSOR, GLFW_CURSOR_NORMAL);
         }
 
         auto aspect = veRenderer.getAspectRatio();
