@@ -97,7 +97,6 @@ void KeyboardCameraController::update(VeCamera& cam, float deltaTime) {
 
 MouseCameraController::MouseCameraController(VeInput& input, float _moveSpeed, float _lookSpeed)
     : CameraController(input), moveSpeed{_moveSpeed}, lookSpeed{_lookSpeed} {
-
     glfwSetInputMode(input.getWindow().getGLFWWindow(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 }
 
@@ -116,7 +115,6 @@ void MouseCameraController::update(VeCamera& cam, float deltaTime) {
 
     // Update camera w/ new direction.
     cam.setViewDirection(cam.getPosition(), direction);
-
 
     glm::vec3 camPos = cam.getPosition();
     // Move camera.

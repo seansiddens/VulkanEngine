@@ -5,7 +5,6 @@
 namespace ve {
 
 VeInput::VeInput(VeWindow &window) : veWindow{window} {
-
     // Set user pointer to point to this instance.
     glfwSetWindowUserPointer(veWindow.getGLFWWindow(), this);
 
@@ -51,6 +50,10 @@ void VeInput::setMousePos(double xPos, double yPos) {
     mouseY = yPos;
 }
 
+void VeInput::setInputMode(int mode, int value) {
+    glfwSetInputMode(veWindow.getGLFWWindow(), mode, value);
+}
+
 // Getters.
 bool VeInput::getKey(int key) {
     if (keyState.count(key) > 0) {
@@ -78,15 +81,14 @@ double VeInput::getDeltaY() const { return deltaY; }
 
 // Input callback functions.
 void VeInput::keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods) {
-    VeInput *input = reinterpret_cast<VeInput *>(glfwGetWindowUserPointer(window));
+    auto *input = reinterpret_cast<VeInput *>(glfwGetWindowUserPointer(window));
 
     input->setKey(key, action);
 }
 
 void VeInput::mouseButtonCallback(GLFWwindow *window, int button, int action, int mods) {
-    VeInput *input = reinterpret_cast<VeInput *>(glfwGetWindowUserPointer(window));
+    auto *input = reinterpret_cast<VeInput *>(glfwGetWindowUserPointer(window));
 
     input->setMouseButton(button, action);
 }
-
 };  // namespace ve

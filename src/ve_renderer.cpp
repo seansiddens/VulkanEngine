@@ -1,5 +1,7 @@
 #include "ve_renderer.hpp"
 
+#include <stdexcept>
+
 namespace ve {
 
 VeRenderer::VeRenderer(VeWindow &window, VeDevice &device) : veWindow{window}, veDevice{device} {

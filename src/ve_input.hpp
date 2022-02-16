@@ -19,6 +19,7 @@ class VeInput {
     void setKey(int key, int action);
     void setMouseButton(int button, int action);
     void setMousePos(double xPos, double yPos);
+    void setInputMode(int mode, int value);
 
     // Returns whether a given key or mouse button is down.
     bool getKey(int key);
