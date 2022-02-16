@@ -93,7 +93,6 @@ void FirstApp::run() {
     ArcballCam arcCam(veInput, glm::vec3(0.f, 0.f, 0.f));
     MouseCameraController mouseCam(veInput);
 
-
     // Initialize the current time.
     auto currentTime = std::chrono::high_resolution_clock::now();
     float totalTime = 0;  // Total elapsed time of the application.
@@ -114,8 +113,15 @@ void FirstApp::run() {
         if (veInput.getKey(GLFW_KEY_ESCAPE)) break;
 
         // Update camera position.
-//        arcCam.update(camera, frameTime);
-        mouseCam.update(camera, frameTime);
+        //        arcCam.update(camera, frameTime);
+
+        // Only update camera when mouse button is held.
+        if (veInput.getMouseButton(GLFW_MOUSE_BUTTON_LEFT)) {
+            veInput.setInputMode(GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+            mouseCam.update(camera, frameTime);
+        } else {
+            veInput.setInputMode(GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+        }
 
         auto aspect = veRenderer.getAspectRatio();
         camera.setPerspectiveProjection(glm::radians(50.f), aspect, .1, 100);
@@ -185,7 +191,7 @@ void FirstApp::loadGameObjects() {
     cubeObj.transform.translation = {0.f, -0.5f, 0.f};
     cubeObj.transform.scale = {0.5f, 0.5f, 0.5f};
     gameObjects.emplace(cubeObj.getId(), std::move(cubeObj));
-//
+    //
     std::shared_ptr<VeModel> quadModel = VeModel::createModelFromFile(veDevice, "models/quad.obj");
     auto floorObj = VeGameObject::createGameObject();
     floorObj.model = quadModel;

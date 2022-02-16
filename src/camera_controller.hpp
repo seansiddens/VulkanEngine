@@ -71,7 +71,7 @@ class MouseCameraController : public CameraController {
         int moveDown = GLFW_KEY_LEFT_CONTROL;
     };
 
-    explicit MouseCameraController(VeInput &input, float _moveSpeed = 3.5f, float _lookSpeed = 0.1f);
+    explicit MouseCameraController(VeInput &input, float _moveSpeed = 3.5f, float _lookSpeed = 1.0f);
 
     void update(VeCamera &cam, float deltaTime) override;
 

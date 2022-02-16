@@ -1,7 +1,8 @@
 #include "ve_texture.hpp"
 
-#include "ve_buffer.hpp"
+#include <stdexcept>
 
+#include "ve_buffer.hpp"
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
