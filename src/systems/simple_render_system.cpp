@@ -67,6 +67,10 @@ SimpleRenderSystem::SimpleRenderSystem(VeDevice& device,
         // Write material info to the UBO.
         ubo->map();
         Material mat{};
+//        mat.ambient = {1.f, 0.5f, 0.31f, 1.f};
+//        mat.diffuse = {1.f, 0.5f, .31f, 1.f};
+//        mat.specular = {0.5f, 0.5f, 0.5f, 1.f};
+//        mat.shininess = 32.f;
         mat.ambient = obj.material.ambient;
         mat.diffuse = obj.material.diffuse;
         mat.specular = obj.material.specular;

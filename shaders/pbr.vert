@@ -40,7 +40,7 @@ void main() {
 
     // The fragments position in world space will be interpolated in frag shader.
     fragPosWorld = positionWorld.xyz;
-    
+
     // Texture coordinates.
     fragTexCoord = uv;
 

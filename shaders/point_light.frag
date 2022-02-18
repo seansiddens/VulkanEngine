@@ -7,9 +7,11 @@ layout(location = 0) out vec4 outColor;
 layout(set = 0, binding = 0) uniform GlobalUbo{
     mat4 projection;
     mat4 view;
-    vec4 ambientLightColor;
     vec3 lightPosition;
-    vec4 lightColor;
+    vec4 lightAmbient;
+    vec4 lightDiffuse;
+    vec4 lightSpecular;
+    vec3 viewPos;
 } ubo;
 
 void main() {
@@ -18,5 +20,5 @@ void main() {
         discard;
     }
 
-    outColor = vec4(ubo.lightColor.rgb, 1.0);
+    outColor = vec4(ubo.lightSpecular.rgb, 1.0);
 }

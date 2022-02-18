@@ -14,9 +14,11 @@ layout(location = 0) out vec2 fragOffset;
 layout(set = 0, binding = 0) uniform GlobalUbo{
     mat4 projection;
     mat4 view;
-    vec4 ambientLightColor;
     vec3 lightPosition;
-    vec4 lightColor;
+    vec4 lightAmbient;
+    vec4 lightDiffuse;
+    vec4 lightSpecular;
+    vec3 viewPos;
 } ubo;
 
 const float LIGHT_RADIUS = 0.1;

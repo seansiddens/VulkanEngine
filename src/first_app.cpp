@@ -23,19 +23,22 @@
 #include <iostream>
 #include <stdexcept>
 
-// TODO: Material abstraction?
 // TODO: Code stuttering after window is changed.
 // TODO: Imgui integration
 // TODO: Keyboard camera controller.
+// TODO: Shadowmapping
+// TODO: PBR
 
 namespace ve {
 
 struct GlobalUbo {
     glm::mat4 projection{1.f};
     glm::mat4 view{1.f};
-    glm::vec4 ambientLightColor{1.f, 1.f, 1.f, 0.5f};  // w is light intensity
     glm::vec3 lightPosition{-3.f, -3.f, 2.0};
-    alignas(16) glm::vec4 lightColor{1.f, 1.f, 1.f, 3.f};  // w is light intensity
+    alignas(16) glm::vec4 lightAmbient{0.4f, 0.4f, 0.4f, 1.f};
+    glm::vec4 lightDiffuse{1.0f, 1.0f, 1.0f, 1.f};
+    glm::vec4 lightSpecular{1.f, 1.f, 1.f, 1.f};
+    glm::vec3 viewPos;
 };
 
 FirstApp::FirstApp() {
@@ -50,7 +53,7 @@ FirstApp::FirstApp() {
 
 void FirstApp::run() {
     // Set clear color.
-    veRenderer.setClearColor({0.2, 0.2, 0.6, 1.f});
+    veRenderer.setClearColor({0.1, 0.1, 0.4, 1.f});
 
     // Create uniform buffer objects.
     std::vector<std::unique_ptr<VeBuffer>> uboBuffers(VeSwapChain::MAX_FRAMES_IN_FLIGHT);
@@ -89,7 +92,7 @@ void FirstApp::run() {
         veDevice, veRenderer.getSwapChainRenderPass(), globalSetLayout->getDescriptorSetLayout()};
 
     // Initialize the camera and camera controller.
-    VeCamera camera(glm::vec3(0.f, 0.f, -3.f), glm::vec3(0.f, 0.f, 0.f));
+    VeCamera camera(glm::vec3(0.f, -1.f, -3.f), glm::vec3(0.f, 0.f, 0.f));
     ArcballCam arcCam(veInput, glm::vec3(0.f, 0.f, 0.f));
     MouseCameraController mouseCam(veInput);
 
@@ -115,13 +118,15 @@ void FirstApp::run() {
         // Update camera position.
         //        arcCam.update(camera, frameTime);
 
-        // Only update camera when mouse button is held.
-        if (veInput.getMouseButton(GLFW_MOUSE_BUTTON_LEFT)) {
-            veInput.setInputMode(GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-            mouseCam.update(camera, frameTime);
-        } else {
-            veInput.setInputMode(GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-        }
+        //        // Only update camera when mouse button is held.
+        //        if (veInput.getMouseButton(GLFW_MOUSE_BUTTON_LEFT)) {
+        //            veInput.setInputMode(GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        //            mouseCam.update(camera, frameTime);
+        //        } else {
+        //            veInput.setInputMode(GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+        //        }
+
+        mouseCam.update(camera, frameTime);
 
         auto aspect = veRenderer.getAspectRatio();
         camera.setPerspectiveProjection(glm::radians(50.f), aspect, .1, 100);
@@ -141,6 +146,7 @@ void FirstApp::run() {
             GlobalUbo ubo{};
             ubo.projection = camera.getProjection();
             ubo.view = camera.getView();
+            ubo.viewPos = camera.getPosition();
             uboBuffers[frameIndex]->writeToBuffer(&ubo);
             uboBuffers[frameIndex]->flush();
 
@@ -165,9 +171,12 @@ void FirstApp::run() {
 void FirstApp::loadGameObjects() {
     // Initialize materials
     Material whiteRubber{
-        glm::vec3(0.05, 0.05, 0.05), glm::vec3(0.5, 0.5, 0.5), glm::vec3(0.7, 0.7, 0.7), 0.078125};
-    Material emerald{
-        {0.0215, 0.1745, 0.0215}, {0.07568, 0.61424, 0.07}, {0.633, 0.727811, 0.633}, 0.6};
+        {0.05, 0.05, 0.05, 1.0}, {0.5, 0.5, 0.5, 1.0}, {0.7, 0.7, 0.7, 1.f}, 0.078125 * 128};
+
+    Material emerald{{0.0215, 0.1745, 0.0215, 1.f},
+                     {0.07568, 0.61424, 0.07, 1.f},
+                     {0.633, 0.727811, 0.633, 1.f},
+                     0.1 * 128};
 
     // Load textures.
     std::shared_ptr<VeTexture> statueTexture =
@@ -207,6 +216,14 @@ void FirstApp::loadGameObjects() {
     floorObj.texture = woodTexture;
     floorObj.material = whiteRubber;
     gameObjects.emplace(floorObj.getId(), std::move(floorObj));
+
+    std::shared_ptr<VeModel> sphereModel = VeModel::createModelFromFile(veDevice, "models/sphere.obj");
+    auto sphereObj = VeGameObject::createGameObject();
+    sphereObj.model = sphereModel;
+    sphereObj.transform.translation ={-1.5f, -1.5f, -1.5f};
+    sphereObj.material = whiteRubber;
+    sphereObj.texture = woodTexture;
+    gameObjects.emplace(sphereObj.getId(), std::move(sphereObj));
 
     // std::shared_ptr<VeModel> vikingModel =
     //     VeModel::createModelFromFile(veDevice, "models/viking_room.obj");

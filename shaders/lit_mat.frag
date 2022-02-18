@@ -10,18 +10,19 @@ layout (location = 0) out vec4 outColor;
 layout(set = 0, binding = 0) uniform GlobalUbo{
     mat4 projection;
     mat4 view;
-    vec4 ambientLightColor;
     vec3 lightPosition;
-    vec4 lightColor;
+    vec4 lightAmbient;
+    vec4 lightDiffuse;
+    vec4 lightSpecular;
+    vec3 viewPos;
 } ubo;
 
-
 layout(set = 1, binding = 0) uniform sampler2D texSampler_;
-layout(set = 1, binding = 1) uniform Material{
-    vec3 ambient;
-    vec3 diffuse;
-    vec3 specular;
-    float shineness;
+layout(set = 1, binding = 1) uniform Material {
+    vec4 ambient;
+    vec4 diffuse;
+    vec4 specular;
+    float shininess;
 } mat;
 
 layout(push_constant) uniform Push {
@@ -29,28 +30,34 @@ layout(push_constant) uniform Push {
     mat4 normalMatrix;
 } push;
 
-const float AMBIENT = 0.02;
-
 void main() {
-    // Fragment world positions are interpolated between vertex world positions.
-    vec3 directionToLight = ubo.lightPosition - fragPosWorld;
 
-    // Light intensity follows the inverse-square law.
-    float attenuation = 1.0 / dot(directionToLight, directionToLight);
+    // Surface normal needs to be normalized again because the linear interpolation of normal vectors isn't
+    // necessarily normal itself.
+    vec3 norm = normalize(fragNormalWorld);
 
-    // color * intensity * attenuation (effected by distance).
-    vec3 lightColor = ubo.lightColor.rgb * ubo.lightColor.w * attenuation;
+    // Direction to light source from frag.
+    vec3 lightDistance = ubo.lightPosition - fragPosWorld;
+    float attenuation = 1.0 / dot(lightDistance, lightDistance);
+    vec3 lightDir = normalize(lightDistance);
 
-    // Scaled by intensity (w).
-    vec3 ambientLightColor = ubo.ambientLightColor.rgb * ubo.ambientLightColor.w;
-
-    vec3 ambient = mat.ambient * ambientLightColor;
+    // Ambient
+    vec3 ambient = ubo.lightAmbient.rgb * mat.ambient.rgb;
 
     // Diffuse
-    // fragNormalWorld must be normalized again because the linear interpolation of normal vectors
-    // isn't necessarily normal itself.
-    vec3 diffuse = lightColor * max(dot(normalize(fragNormalWorld), normalize(directionToLight)), 0) * mat.diffuse;
+    float diff = max(dot(norm, lightDir),  0.0);
+    vec3 diffuse = ubo.lightDiffuse.rgb * (diff * mat.diffuse.rgb);
 
+    // Specular
+    vec3 viewDir = normalize(ubo.viewPos - fragPosWorld); // Direction to the camera from frag.
+    vec3 reflectDir = reflect(-lightDir, norm); // Light ray reflected about surface normal.
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), mat.shininess); // Amount of light reflected back to viewer.
+    vec3 specular = ubo.lightSpecular.rgb * (spec * mat.specular.rgb);
+
+    // Attenuate
+//    ambient *= attenuation;
+//    diffuse *= attenuation;
+//    specular *= attenuation;
 
     vec3 result = ambient + diffuse;
     outColor = vec4(result, 1.0);
