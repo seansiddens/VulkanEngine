@@ -12,6 +12,10 @@
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 
+#include <imgui.h>
+#include <imgui_impl_glfw.h>
+#include <imgui_impl_vulkan.h>
+
 #include <glm/glm.hpp>
 #include <glm/gtc/constants.hpp>
 
@@ -46,8 +50,15 @@ FirstApp::FirstApp() {
             .addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VeSwapChain::MAX_FRAMES_IN_FLIGHT)
             .build();
 
+    initImgui();
     //    loadGameObjects();
     loadTestScene();
+}
+
+FirstApp::~FirstApp() {
+    ImGui_ImplVulkan_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
 }
 
 void FirstApp::run() {
@@ -56,7 +67,7 @@ void FirstApp::run() {
 
     // Create uniform buffer objects.
     std::vector<std::unique_ptr<VeBuffer>> uboBuffers(VeSwapChain::MAX_FRAMES_IN_FLIGHT);
-    for (auto &uboBuffer : uboBuffers) {
+    for (auto& uboBuffer : uboBuffers) {
         uboBuffer = std::make_unique<VeBuffer>(veDevice,
                                                sizeof(GlobalUbo),
                                                1,
@@ -95,6 +106,8 @@ void FirstApp::run() {
     ArcballCam arcCam(veInput, glm::vec3(0.f, 0.f, 0.f));
     MouseCameraController mouseCam(veInput);
 
+    ImGuiIO& io = ImGui::GetIO();
+
     // Initialize the current time.
     auto currentTime = std::chrono::high_resolution_clock::now();
     float totalTime = 0;  // Total elapsed time of the application.
@@ -115,7 +128,7 @@ void FirstApp::run() {
         if (veInput.getKey(GLFW_KEY_ESCAPE)) break;
 
         // Only update camera when mouse button is held.
-        if (veInput.getMouseButton(GLFW_MOUSE_BUTTON_LEFT)) {
+        if (veInput.getMouseButton(GLFW_MOUSE_BUTTON_LEFT) && !io.WantCaptureMouse) {
             veInput.setInputMode(GLFW_CURSOR, GLFW_CURSOR_DISABLED);
             mouseCam.update(camera, frameTime);
         } else {
@@ -124,6 +137,17 @@ void FirstApp::run() {
 
         auto aspect = veRenderer.getAspectRatio();
         camera.setPerspectiveProjection(glm::radians(50.f), aspect, .1, 100);
+
+        // Imgui new frame
+        ImGui_ImplVulkan_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+
+        // Imgui commands.
+        ImGui::ShowDemoWindow();
+
+        // Finalize the ImGui frame and prepare draw data.
+        ImGui::Render();
 
         // beginFrame() will return a nullptr if swap chain needs to be recreated (window resized).
         if (auto commandBuffer = veRenderer.beginFrame()) {
@@ -149,6 +173,7 @@ void FirstApp::run() {
 
             simpleRenderSystem.renderGameObjects(frameInfo);
             pointLightSystem.render(frameInfo);
+            ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), commandBuffer);
 
             // End render pass and frame.
             veRenderer.endSwapChainRenderPass(commandBuffer);
@@ -246,6 +271,57 @@ void FirstApp::loadTestScene() {
             gameObjects.emplace(sphereObj.getId(), std::move(sphereObj));
         }
     }
+}
+
+// Resources used:
+// - https://vkguide.dev/docs/extra-chapter/implementing_imgui/
+// - https://frguthmann.github.io/posts/vulkan_imgui/
+void FirstApp::initImgui() {
+    // Setup ImGui context
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+
+    // Setup Imgui style.
+    ImGui::StyleColorsDark();
+
+    // Create descriptor pool for Imgui.
+    std::vector<VkDescriptorPoolSize> poolSizes({{VK_DESCRIPTOR_TYPE_SAMPLER, 1000},
+                                                 {VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000},
+                                                 {VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 1000},
+                                                 {VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1000},
+                                                 {VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 1000},
+                                                 {VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, 1000},
+                                                 {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1000},
+                                                 {VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1000},
+                                                 {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1000},
+                                                 {VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 1000},
+                                                 {VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 1000}});
+    imguiPool = std::make_unique<VeDescriptorPool>(
+        veDevice, 1000, VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT, poolSizes);
+
+    // Setup platform/renderer bindings.
+    ImGui_ImplGlfw_InitForVulkan(veWindow.getGLFWWindow(), true);
+    ImGui_ImplVulkan_InitInfo initInfo{};
+    initInfo.Instance = veDevice.getInstance();
+    initInfo.PhysicalDevice = veDevice.getPhysicalDevice();
+    initInfo.Device = veDevice.device();
+    initInfo.Queue = veDevice.graphicsQueue();
+    initInfo.PipelineCache = VK_NULL_HANDLE;
+    initInfo.DescriptorPool = imguiPool->pool();
+    initInfo.Allocator = nullptr;
+    initInfo.MinImageCount = veRenderer.getSwapChainImageCount();
+    initInfo.ImageCount = veRenderer.getSwapChainImageCount();
+    // TODO: Change this later when doing multisampling?
+    initInfo.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
+    ImGui_ImplVulkan_Init(&initInfo, veRenderer.getSwapChainRenderPass());
+
+    // Setup font stuff.
+    VkCommandBuffer cmdBuffer = veDevice.beginSingleTimeCommands();
+    ImGui_ImplVulkan_CreateFontsTexture(cmdBuffer);
+    veDevice.endSingleTimeCommands(cmdBuffer);
+
+    // Clear font textures from cpu data.
+    ImGui_ImplVulkan_DestroyFontUploadObjects();
 }
 
 }  // namespace ve

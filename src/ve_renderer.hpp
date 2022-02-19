@@ -32,11 +32,11 @@ class VeRenderer {
         assert(isFrameStarted && "Cannot get command buffer when frame not in progress");
         return commandBuffers[currentFrameIndex];
     }
-
     [[nodiscard]] int getFrameIndex() const {
         assert(isFrameStarted && "Cannot get frame index when frame not in progress!");
         return currentFrameIndex;
     }
+    [[nodiscard]] uint32_t getSwapChainImageCount() const { return veSwapChain->imageCount(); }
 
     void setClearColor(VkClearColorValue _clearColor) { clearColor = _clearColor; }
 

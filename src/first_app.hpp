@@ -19,6 +19,7 @@ class FirstApp {
     static constexpr int HEIGHT = 720;
 
     FirstApp();
+    ~FirstApp();
 
     // Remove copy constructors.
     FirstApp(const FirstApp &) = delete;
@@ -29,6 +30,7 @@ class FirstApp {
    private:
     void loadGameObjects();
     void loadTestScene();
+    void initImgui();
 
     // NOTE: These classes need to be initialized in this order.
     VeWindow veWindow{WIDTH, HEIGHT, "Hello Vulkan!"};
@@ -37,6 +39,7 @@ class FirstApp {
     VeRenderer veRenderer{veWindow, veDevice};
 
     std::unique_ptr<VeDescriptorPool> globalPool{};
+    std::unique_ptr<VeDescriptorPool> imguiPool{};
     VeGameObject::Map gameObjects;
 };
 

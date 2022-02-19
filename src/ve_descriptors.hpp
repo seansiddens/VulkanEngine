@@ -51,7 +51,7 @@ class VeDescriptorPool {
         Builder &addPoolSize(VkDescriptorType descriptorType, uint32_t count);
         Builder &setPoolFlags(VkDescriptorPoolCreateFlags flags);
         Builder &setMaxSets(uint32_t count);
-        std::unique_ptr<VeDescriptorPool> build() const;
+        [[nodiscard]] std::unique_ptr<VeDescriptorPool> build() const;
 
        private:
         VeDevice &veDevice;
@@ -78,6 +78,8 @@ class VeDescriptorPool {
                             VkDescriptorSet &descriptor) const;
 
     void freeDescriptors(std::vector<VkDescriptorSet> &descriptors) const;
+
+    VkDescriptorPool pool() { return descriptorPool; }
 
     void resetPool();
 
