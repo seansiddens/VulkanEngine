@@ -28,6 +28,7 @@ class FirstApp {
 
    private:
     void loadGameObjects();
+    void loadTestScene();
 
     // NOTE: These classes need to be initialized in this order.
     VeWindow veWindow{WIDTH, HEIGHT, "Hello Vulkan!"};

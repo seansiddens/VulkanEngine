@@ -4,13 +4,12 @@ layout(location = 0) in vec2 fragOffset;
 
 layout(location = 0) out vec4 outColor;
 
+// Set and binding numbers must match the descriptor set layout.
 layout(set = 0, binding = 0) uniform GlobalUbo{
     mat4 projection;
     mat4 view;
     vec3 lightPosition;
-    vec4 lightAmbient;
-    vec4 lightDiffuse;
-    vec4 lightSpecular;
+    vec3 lightColor;
     vec3 viewPos;
 } ubo;
 
@@ -20,5 +19,5 @@ void main() {
         discard;
     }
 
-    outColor = vec4(ubo.lightSpecular.rgb, 1.0);
+    outColor = vec4(ubo.lightColor, 1.0);
 }

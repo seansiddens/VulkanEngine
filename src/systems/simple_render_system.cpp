@@ -67,14 +67,10 @@ SimpleRenderSystem::SimpleRenderSystem(VeDevice& device,
         // Write material info to the UBO.
         ubo->map();
         Material mat{};
-//        mat.ambient = {1.f, 0.5f, 0.31f, 1.f};
-//        mat.diffuse = {1.f, 0.5f, .31f, 1.f};
-//        mat.specular = {0.5f, 0.5f, 0.5f, 1.f};
-//        mat.shininess = 32.f;
-        mat.ambient = obj.material.ambient;
-        mat.diffuse = obj.material.diffuse;
-        mat.specular = obj.material.specular;
-        mat.shininess = obj.material.shininess;
+        mat.albedo = obj.material.albedo;
+        mat.metallic = obj.material.metallic;
+        mat.roughness = obj.material.roughness;
+        mat.ao = obj.material.ao;
         ubo->writeToBuffer(&mat);
         ubo->flush();
         auto bufferInfo = ubo->descriptorInfo();
@@ -130,7 +126,7 @@ void SimpleRenderSystem::createPipeline(VkRenderPass renderPass) {
     pipelineConfig.renderPass = renderPass;
     pipelineConfig.pipelineLayout = pipelineLayout;
     vePipeline = std::make_unique<VePipeline>(
-        veDevice, "shaders/lit_mat.vert.spv", "shaders/lit_mat.frag.spv", pipelineConfig);
+        veDevice, "shaders/pbr.vert.spv", "shaders/pbr.frag.spv", pipelineConfig);
 }
 
 void SimpleRenderSystem::renderGameObjects(FrameInfo& frameInfo) {

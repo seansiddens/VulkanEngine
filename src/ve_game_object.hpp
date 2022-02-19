@@ -21,10 +21,10 @@ struct TransformComponent {
 };
 
 struct Material {
-    glm::vec4 ambient;
-    glm::vec4 diffuse;
-    glm::vec4 specular;
-    float shininess;
+    glm::vec3 albedo{0.5f, 0.f, 0.f};
+    float metallic{0.3f};
+    float roughness{0.5f};
+    float ao{1.f};
 };
 
 class VeGameObject {

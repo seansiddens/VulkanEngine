@@ -4,4 +4,4 @@ build/
 .idea/
 cmake-build-debug/
 .env.cmake
-
+.run/

@@ -16,9 +16,7 @@ layout(set = 0, binding = 0) uniform GlobalUbo{
     mat4 projection;
     mat4 view;
     vec3 lightPosition;
-    vec4 lightAmbient;
-    vec4 lightDiffuse;
-    vec4 lightSpecular;
+    vec3 lightColor;
     vec3 viewPos;
 } ubo;
 
@@ -28,7 +26,7 @@ layout(push_constant) uniform Push {
 } push;
 
 void main() {
-    // Transform vertex position to world space
+    // Transform model's vertex position to world space
     vec4 positionWorld = push.modelMatrix * vec4(position, 1.0);
 
     // Apply view and then projection.
