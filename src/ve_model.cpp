@@ -206,6 +206,7 @@ void VeModel::Builder::loadModel(const std::string &filepath) {
             indices.push_back(uniqueVertices[vertex]);
         }
     }
+    std::cout << "Vertice count: " << vertices.size() << "\n";
 }
 
 }  // namespace ve

@@ -55,7 +55,8 @@ SimpleRenderSystem::SimpleRenderSystem(VeDevice& device,
         // Write material info.
         VkDescriptorImageInfo imageInfo{};
         imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        imageInfo.imageView = obj.texture->imageView();
+        if (obj.texture != nullptr)
+            imageInfo.imageView = obj.texture->imageView();
         imageInfo.sampler = textureSampler;
 
         // Allocate material UBO.

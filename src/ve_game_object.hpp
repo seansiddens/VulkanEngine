@@ -12,9 +12,9 @@
 namespace ve {
 
 struct TransformComponent {
-    glm::vec3 translation{};
+    glm::vec3 translation{0.f, 0.f, 0.f};
     glm::vec3 scale{1.f, 1.f, 1.f};
-    glm::vec3 rotation{};
+    glm::vec3 rotation{0.f, 0.f, 0.f};
 
     [[nodiscard]] glm::mat4 mat4() const;
     [[nodiscard]] glm::mat3 normalMatrix() const;
@@ -48,7 +48,7 @@ class VeGameObject {
     std::shared_ptr<VeModel> model{};
     glm::vec3 color{};
     TransformComponent transform{};
-    std::shared_ptr<VeTexture> texture{};
+    std::shared_ptr<VeTexture> texture = nullptr;
     Material material{};
 
    private:

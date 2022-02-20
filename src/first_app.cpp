@@ -27,18 +27,12 @@
 #include <iostream>
 #include <stdexcept>
 
-// TODO: Code stuttering after window is changed.
-// TODO: Imgui integration
-// TODO: Keyboard camera controller.
-// TODO: Shadowmapping
-// TODO: PBR
-
 namespace ve {
 
 struct GlobalUbo {
     glm::mat4 projection{1.f};
     glm::mat4 view{1.f};
-    glm::vec3 lightPosition{4.f, -4.f, 0.0};
+    glm::vec3 lightPosition{0.f, -4.f, 0.0};
     alignas(16) glm::vec3 lightColor{150.f, 150.f, 150.f};
     alignas(16) glm::vec3 viewPos;
 };
@@ -52,7 +46,8 @@ FirstApp::FirstApp() {
 
     initImgui();
     //    loadGameObjects();
-    loadTestScene();
+    //    loadTestScene();
+    initScene();
 }
 
 FirstApp::~FirstApp() {
@@ -105,6 +100,7 @@ void FirstApp::run() {
     VeCamera camera(glm::vec3(4.f, -4.f, 0.f));
     ArcballCam arcCam(veInput, glm::vec3(0.f, 0.f, 0.f));
     MouseCameraController mouseCam(veInput);
+    mouseCam.moveSpeed = 25.f;
 
     ImGuiIO& io = ImGui::GetIO();
 
@@ -136,7 +132,7 @@ void FirstApp::run() {
         }
 
         auto aspect = veRenderer.getAspectRatio();
-        camera.setPerspectiveProjection(glm::radians(50.f), aspect, .1, 100);
+        camera.setPerspectiveProjection(glm::radians(50.f), aspect, .1, 1000);
 
         // Imgui new frame
         ImGui_ImplVulkan_NewFrame();
@@ -187,6 +183,11 @@ void FirstApp::run() {
     frame += 1;
 }
 
+void FirstApp::initScene() {
+    loadTestScene();
+//    initSponzaScene();
+}
+
 void FirstApp::loadGameObjects() {
     // Load textures.
     std::shared_ptr<VeTexture> statueTexture =
@@ -229,7 +230,6 @@ void FirstApp::loadGameObjects() {
     auto sphereObj = VeGameObject::createGameObject();
     sphereObj.model = sphereModel;
     sphereObj.transform.translation = {-1.5f, -1.5f, -1.5f};
-    sphereObj.texture = woodTexture;
     gameObjects.emplace(sphereObj.getId(), std::move(sphereObj));
 
     // std::shared_ptr<VeModel> vikingModel =
@@ -248,6 +248,11 @@ void FirstApp::loadTestScene() {
 
     std::shared_ptr<VeModel> sphereModel =
         VeModel::createModelFromFile(veDevice, "models/sphere.obj");
+    std::shared_ptr<VeModel> cubeModel = VeModel::createModelFromFile(veDevice, "models/cube/cube.obj");
+    std::shared_ptr<VeModel> monkeyModel = VeModel::createModelFromFile(veDevice, "models/suzanne.obj");
+    std::shared_ptr<VeModel> bunnyModel = VeModel::createModelFromFile(veDevice, "models/bunny.obj");
+    std::shared_ptr<VeModel> minecraft = VeModel::createModelFromFile(veDevice, "models/lost_empire/lost_empire.obj");
+
     int numSpheres = 4;
 
     for (int i = 0; i < numSpheres; i++) {
@@ -271,6 +276,65 @@ void FirstApp::loadTestScene() {
             gameObjects.emplace(sphereObj.getId(), std::move(sphereObj));
         }
     }
+
+    auto cubeObj = VeGameObject::createGameObject();
+    cubeObj.model = cubeModel;
+    cubeObj.transform.scale *= 20.f;
+    cubeObj.transform.translation = {0.f, 10.f, 0.f};
+    cubeObj.texture = woodTexture;
+    cubeObj.material.roughness = 0.9f;
+    cubeObj.material.albedo = {0.9f, 0.9f, 0.9f};
+    cubeObj.material.metallic = 0.0f;
+    cubeObj.material.ao = 1.f;
+    gameObjects.emplace(cubeObj.getId(), std::move(cubeObj));
+
+    auto monkeyObj = VeGameObject::createGameObject();
+    monkeyObj.model = monkeyModel;
+    monkeyObj.texture = woodTexture;
+    monkeyObj.transform.translation = {-3.f, -3.f, 0.0f};
+//    monkeyObj.transform.rotation = {M_PI, M_PI / 2.f, 0.f};
+    monkeyObj.transform.scale *= 3.0;
+    monkeyObj.material.roughness = 0.4f;
+    monkeyObj.material.albedo = {0.4f, 0.6f, 0.9f};
+    monkeyObj.material.metallic = 0.1f;
+    monkeyObj.material.ao = 1.f;
+    gameObjects.emplace(monkeyObj.getId(), std::move(monkeyObj));
+
+    auto bunnyObj = VeGameObject::createGameObject();
+    bunnyObj.model = bunnyModel;
+    bunnyObj.texture = woodTexture;
+    bunnyObj.transform.translation = {0.f, 0.f, 4.f};
+    bunnyObj.transform.rotation = {M_PI, 0.f, 0.f};
+    bunnyObj.material.roughness = 0.4f;
+    bunnyObj.material.albedo = {0.0f, 0.6f, 0.0f};
+    bunnyObj.material.metallic = 0.1f;
+    bunnyObj.material.ao = 1.f;
+    gameObjects.emplace(bunnyObj.getId(), std::move(bunnyObj));
+
+    auto minecraftObj = VeGameObject::createGameObject();
+    minecraftObj.model = minecraft;
+    minecraftObj.transform.rotation.x = M_PI;
+    minecraftObj.transform.translation.y = 50.f;
+    minecraftObj.texture = woodTexture;
+    minecraftObj.material.roughness = 0.9f;
+    minecraftObj.material.albedo = {0.9f, 0.9f, 0.9f};
+    minecraftObj.material.metallic = 0.0f;
+    minecraftObj.material.ao = 1.f;
+    gameObjects.emplace(minecraftObj.getId(), std::move(minecraftObj));
+
+}
+
+// TODO: Sponza model does not work at all lol
+void FirstApp::initSponzaScene() {
+    std::shared_ptr<VeModel> sponzaModel =
+        VeModel::createModelFromFile(veDevice, "models/sponza/sponza.obj");
+    auto sponzaObj = VeGameObject::createGameObject();
+    sponzaObj.model = sponzaModel;
+    sponzaObj.material.roughness = 0.9f;
+    sponzaObj.material.albedo = {0.9f, 0.9f, 0.9f};
+    sponzaObj.material.metallic = 0.0f;
+    sponzaObj.material.ao = 1.f;
+    gameObjects.emplace(sponzaObj.getId(), std::move(sponzaObj));
 }
 
 // Resources used:

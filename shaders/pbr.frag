@@ -130,7 +130,7 @@ void main() {
     }
 
     // Improvised ambient term.
-    vec3 ambient = vec3(0.03) * mat.albedo * mat.ao;
+    vec3 ambient = vec3(0.005) * mat.albedo * mat.ao;
 
     vec3 color = ambient + Lo;
     // Tone mapping and gamma correction.

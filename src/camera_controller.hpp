@@ -69,6 +69,8 @@ class MouseCameraController : public CameraController {
         int moveBackward = GLFW_KEY_S;
         int moveUp = GLFW_KEY_LEFT_SHIFT;
         int moveDown = GLFW_KEY_LEFT_CONTROL;
+        int increaseMoveSpeed = GLFW_KEY_E;
+        int decreaseMoveSpeed = GLFW_KEY_Q;
     };
 
     explicit MouseCameraController(VeInput &input, float _moveSpeed = 3.5f, float _lookSpeed = 2.0f);
@@ -80,6 +82,7 @@ class MouseCameraController : public CameraController {
     float lookSpeed;
 
    private:
+    const float MAX_MOVE_SPEED = 999999.f;
     // Initialize values to face +Z.
     float m_pitch{0.f};
     float m_yaw{M_PI / 2.f};
