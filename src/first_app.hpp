@@ -35,7 +35,7 @@ class FirstApp {
     void initSponzaScene();
 
     // NOTE: These classes need to be initialized in this order.
-    VeWindow veWindow{WIDTH, HEIGHT, "Hello Vulkan!"};
+    VeWindow veWindow{WIDTH, HEIGHT, "Vulkan Engine"};
     VeInput veInput{veWindow};
     VeDevice veDevice{veWindow};
     VeRenderer veRenderer{veWindow, veDevice};
