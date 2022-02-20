@@ -380,6 +380,12 @@ void VeSwapChain::createSyncObjects() {
     }
 }
 
+// https://stackoverflow.com/questions/66401081/vulkan-swapchain-format-unorm-vs-srgb
+// It appears that if format is SRGB, then color converions will be done automatically e.g
+// the output of the fragment shader, even if it's in linear space, will be automatically
+// transformed to gamma space if the color attachment's format is SRGB.
+// Additionally, if reading from an SRGB texture, sampling will automatically be converted to
+// linear space.
 VkSurfaceFormatKHR VeSwapChain::chooseSwapSurfaceFormat(
     const std::vector<VkSurfaceFormatKHR> &availableFormats) {
     for (const auto &availableFormat : availableFormats) {

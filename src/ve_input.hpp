@@ -9,6 +9,7 @@
 
 namespace ve {
 
+// TODO: Make this a singleton (whatever that entails)?
 class VeInput {
    public:
     explicit VeInput(VeWindow &window);
@@ -16,9 +17,6 @@ class VeInput {
     // This function should be called once every frame.
     void pollEvents();
 
-    void setKey(int key, int action);
-    void setMouseButton(int button, int action);
-    void setMousePos(double xPos, double yPos);
     void setInputMode(int mode, int value);
 
     // Returns whether a given key or mouse button is down.
@@ -26,19 +24,21 @@ class VeInput {
     bool getMouseButton(int button);
 
     // Get mouse position and change in position.
-    double getMouseX() const;
-    double getMouseY() const;
-    double getDeltaX() const;
-    double getDeltaY() const;
+    std::pair<float, float> getMousePos() const { return {(float)mouseX, (float)mouseY}; }
+    float getMouseX() const { return getMousePos().first; }
+    float getMouseY() const { return getMousePos().second; }
+    std::pair<float, float> getMouseDelta() const { return {(float)deltaX, (float)deltaY}; }
+    float getMouseDeltaX() const { return getMouseDelta().first; }
+    float getMouseDeltaY() const { return getMouseDelta().second; }
 
     VeWindow &getWindow() const { return veWindow; }
 
    private:
     // Maps storing key and mouse button states.
-    std::unordered_map<int, int> keyState;
-    std::unordered_map<int, int> mouseState;
+    std::unordered_map<int, bool> keyState;
+    std::unordered_map<int, bool> mouseState;
 
-    // Mouse positions are measured in screen coordinates relative to the top-left corner
+    // Mouse position and delta are measured in screen coordinates relative to the top-left corner
     // of the window content area (+X left, +Y down).
     // Current X and Y position of the mouse.
     double mouseX{}, mouseY{};
@@ -47,7 +47,7 @@ class VeInput {
     double lastMouseX;
     double lastMouseY;
 
-    // Change in X and Y between frames.
+    // Change in mouse position between frames.
     double deltaX{0.0}, deltaY{0.0};
 
     // Input callbacks.

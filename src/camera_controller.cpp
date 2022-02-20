@@ -33,8 +33,8 @@ void ArcballCam::update(VeCamera& cam, float deltaTime) {
     }
 
     // Amount to rotate.
-    auto deltaAngleX = static_cast<float>((veInput.getDeltaX() * -1.0) * angleScaleX);
-    auto deltaAngleY = static_cast<float>((veInput.getDeltaY() * -1.0) * angleScaleY);
+    auto deltaAngleX = static_cast<float>((veInput.getMouseDeltaX() * -1.0) * angleScaleX);
+    auto deltaAngleY = static_cast<float>((veInput.getMouseDeltaY() * -1.0) * angleScaleY);
 
     if (veInput.getMouseButton(GLFW_MOUSE_BUTTON_LEFT)) {
         // Rotate camera object around pivot point about the Y axis.
@@ -101,8 +101,8 @@ MouseCameraController::MouseCameraController(VeInput& input, float _moveSpeed, f
 }
 
 void MouseCameraController::update(VeCamera& cam, float deltaTime) {
-    m_yaw -= veInput.getDeltaX() * deltaTime * lookSpeed;
-    m_pitch += veInput.getDeltaY() * deltaTime * lookSpeed;
+    m_yaw -= veInput.getMouseDeltaX() * deltaTime * lookSpeed;
+    m_pitch += veInput.getMouseDeltaY() * deltaTime * lookSpeed;
 
     // Clamp pitch between +/- 85 degrees.
     m_pitch = glm::clamp(m_pitch, -1.5f, 1.5f);
