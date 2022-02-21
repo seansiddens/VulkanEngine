@@ -1,5 +1,5 @@
 .vscode
-shaders/*.spv
+assets/shaders/*.spv
 build/
 .idea/
 cmake-build-debug/
