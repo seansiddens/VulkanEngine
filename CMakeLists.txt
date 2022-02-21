@@ -75,6 +75,7 @@ set(IMGUI_SOURCES
 
 # Find all .cpp and  within the /src directory (including files within nested folders).
 file(GLOB_RECURSE SOURCES ${PROJECT_SOURCE_DIR}/src/ *.cpp)
+message(${SOURCES})
 
 # Add our executable which is built from all of the source files.
 # TODO: Figure out how to add Imgui as a static library.
