@@ -94,9 +94,9 @@ vec4 srgb_to_linear(vec4 srgb) {
 
 void main() {
     vec3 albedo = texture(albedoMap, fragTexCoord).rgb * mat.albedo;
-    float metallic = srgb_to_linear(texture(metallicMap, fragTexCoord)).r * mat.metallic;
-    float roughness = srgb_to_linear(texture(roughnessMap, fragTexCoord)).r * mat.roughness;
-    float ao = srgb_to_linear(texture(aoMap, fragTexCoord)).r * mat.ao;
+    float metallic = texture(metallicMap, fragTexCoord).r * mat.metallic;
+    float roughness = texture(roughnessMap, fragTexCoord).r * mat.roughness;
+    float ao = texture(aoMap, fragTexCoord).r * mat.ao;
 
     vec3 N = normalize(fragNormalWorld); // Surface normal
     vec3 V = normalize(ubo.viewPos - fragPosWorld); // View direction

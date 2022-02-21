@@ -68,13 +68,13 @@ set(IMGUI_SOURCES
         ${IMGUI_PATH}/imgui_widgets.cpp
         ${IMGUI_PATH}/imgui_tables.cpp
         ${IMGUI_PATH}/imgui_impl_glfw.cpp
-        ${IMGUI_PATH}/imgui_impl_vulkan.cpp src/ImGui/ve_imgui.cpp src/ImGui/ve_imgui.h)
+        ${IMGUI_PATH}/imgui_impl_vulkan.cpp)
 #message(${IMGUI_SOURCES})
 #add_library(imgui STATIC ${IMGUI_SOURCES})
 #target_include_directories(imgui PUBLIC ${VULKAN_INCLUDE_DIRS} ${GLFW_INCLUDE_DIRS})
 
 # Find all .cpp and  within the /src directory (including files within nested folders).
-file(GLOB_RECURSE SOURCES ${PROJECT_SOURCE_DIR}/src/*.cpp)
+file(GLOB_RECURSE SOURCES ${PROJECT_SOURCE_DIR}/src/ *.cpp)
 
 # Add our executable which is built from all of the source files.
 # TODO: Figure out how to add Imgui as a static library.

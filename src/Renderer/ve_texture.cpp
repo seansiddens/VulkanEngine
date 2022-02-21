@@ -17,7 +17,8 @@
 
 namespace ve {
 
-VeTexture::VeTexture(VeDevice& device, const std::string& filepath) : veDevice{device} {
+VeTexture::VeTexture(VeDevice& device, const std::string& filepath, VkFormat format)
+    : veDevice{device}, m_format{format} {
     createTextureImageFromFile(filepath);
     createTextureImageView();
 }
@@ -25,8 +26,9 @@ VeTexture::VeTexture(VeDevice& device, const std::string& filepath) : veDevice{d
 VeTexture::VeTexture(VeDevice& device,
                      const std::vector<unsigned char>& pixels,
                      int texWidth,
-                     int texHeight)
-    : veDevice{device} {
+                     int texHeight,
+                     VkFormat format)
+    : veDevice{device}, m_format{format} {
     createTextureImageFromPixels(pixels, texWidth, texHeight);
     createTextureImageView();
 }
@@ -38,14 +40,15 @@ VeTexture::~VeTexture() {
 }
 
 std::unique_ptr<VeTexture> VeTexture::createTextureFromFile(VeDevice& device,
-                                                            const std::string& filepath) {
-    return std::make_unique<VeTexture>(device, filepath);
+                                                            const std::string& filepath,
+                                                            VkFormat format) {
+    return std::make_unique<VeTexture>(device, filepath, format);
 }
 
 std::unique_ptr<VeTexture> VeTexture::createEmptyTexture(VeDevice& veDevice) {
     unsigned char pixels[] = {255, 255, 255, 255};  // Texture data.
     return std::make_unique<VeTexture>(
-        veDevice, std::vector<unsigned char>(std::begin(pixels), std::end(pixels)), 1, 1);
+        veDevice, std::vector<unsigned char>(std::begin(pixels), std::end(pixels)), 1, 1, VK_FORMAT_R8G8B8A8_UNORM);
 }
 
 void VeTexture::createTextureImageFromFile(const std::string& filepath) {
@@ -79,7 +82,7 @@ void VeTexture::createTextureImageFromFile(const std::string& filepath) {
     imageInfo.extent.depth = 1;
     imageInfo.mipLevels = 1;
     imageInfo.arrayLayers = 1;
-    imageInfo.format = VK_FORMAT_R8G8B8A8_SRGB;
+    imageInfo.format = m_format;
     imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
     imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
     // Going to be used as destination of our staging buffer and will be sampled in our shaders.
@@ -141,7 +144,7 @@ void VeTexture::createTextureImageFromPixels(const std::vector<unsigned char>& p
     imageInfo.extent.depth = 1;
     imageInfo.mipLevels = 1;
     imageInfo.arrayLayers = 1;
-    imageInfo.format = VK_FORMAT_R8G8B8A8_SRGB;
+    imageInfo.format = m_format;
     imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
     imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
     // Going to be used as destination of our staging buffer and will be sampled in our shaders.
@@ -181,7 +184,7 @@ void VeTexture::createTextureImageView() {
     viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
     viewInfo.image = textureImage;  // Image associated w/ the view.
     viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-    viewInfo.format = VK_FORMAT_R8G8B8A8_SRGB;
+    viewInfo.format = m_format;
     viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
     viewInfo.subresourceRange.baseMipLevel = 0;
     viewInfo.subresourceRange.levelCount = 1;

@@ -9,12 +9,16 @@ namespace ve {
 
 class VeTexture {
    public:
-    VeTexture(VeDevice& device, const std::string& filepath);
-    VeTexture(VeDevice& device, const std::vector<unsigned char>& pixels, int texWidth, int texHeight);
+    VeTexture(VeDevice& device, const std::string& filepath, VkFormat = VK_FORMAT_R8G8B8A8_SRGB);
+    VeTexture(VeDevice& device,
+              const std::vector<unsigned char>& pixels,
+              int texWidth,
+              int texHeight,
+              VkFormat = VK_FORMAT_R8G8B8A8_SRGB);
     ~VeTexture();
 
-    static std::unique_ptr<VeTexture> createTextureFromFile(VeDevice& device,
-                                                            const std::string& filepath);
+    static std::unique_ptr<VeTexture> createTextureFromFile(
+        VeDevice& device, const std::string& filepath, VkFormat format = VK_FORMAT_R8G8B8A8_SRGB);
     // Creates a 1x1 white texture.
     static std::unique_ptr<VeTexture> createEmptyTexture(VeDevice&);
     static VkSampler createTextureSampler(VeDevice& veDevice);
@@ -29,6 +33,7 @@ class VeTexture {
     void createTextureImageView();
 
     VeDevice& veDevice;
+    VkFormat m_format{VK_FORMAT_R8G8B8A8_SRGB};
     VkImage textureImage{};
     VkDeviceMemory textureImageMemory{};
     VkImageView textureImageView{};
