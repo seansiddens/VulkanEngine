@@ -37,37 +37,41 @@ SimpleRenderSystem::SimpleRenderSystem(VeDevice& device,
     // Create descriptor pool which allows for a descriptor set for each game object.
     simplePool = VeDescriptorPool::Builder(veDevice)
                      .setMaxSets(numGameObjects)
-                     .addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, numGameObjects)
+                     .addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000)
                      .addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, numGameObjects)
                      .build();
 
     // Create descriptor layout.
-    simpleLayout =
-        VeDescriptorSetLayout::Builder(veDevice)
-            .addBinding(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
-            .addBinding(1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT)
-            .build();
+    simpleLayout = VeDescriptorSetLayout::Builder(veDevice)
+                       .addBinding(0,
+                                   VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+                                   VK_SHADER_STAGE_FRAGMENT_BIT)  // Albedo
+                       .addBinding(1,
+                                   VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+                                   VK_SHADER_STAGE_FRAGMENT_BIT)  // Metallic
+                       .addBinding(2,
+                                   VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+                                   VK_SHADER_STAGE_FRAGMENT_BIT)  // Rougness
+                       .addBinding(3,
+                                   VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+                                   VK_SHADER_STAGE_FRAGMENT_BIT)  // AO
+                       .addBinding(4,
+                                   VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+                                   VK_SHADER_STAGE_FRAGMENT_BIT)  // Uniform buffer
+                       .build();
 
     // Create descriptor set for each game object
     for (const auto& [id, obj] : gameObjects) {
         VkDescriptorSet descriptorSet{};
-
-        // Write material info.
-        VkDescriptorImageInfo imageInfo{};
-        imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        if (obj.texture != nullptr)
-            imageInfo.imageView = obj.texture->imageView();
-        imageInfo.sampler = textureSampler;
-
         // Allocate material UBO.
         auto ubo = std::make_unique<VeBuffer>(veDevice,
-                                              sizeof(Material),
+                                              sizeof(PBRMaterial),
                                               1,
                                               VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
                                               VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
         // Write material info to the UBO.
         ubo->map();
-        Material mat{};
+        PBRMaterial mat{};
         mat.albedo = obj.material.albedo;
         mat.metallic = obj.material.metallic;
         mat.roughness = obj.material.roughness;
@@ -77,10 +81,34 @@ SimpleRenderSystem::SimpleRenderSystem(VeDevice& device,
         auto bufferInfo = ubo->descriptorInfo();
         materialUBOs.push_back(std::move(ubo));
 
+        // Write texture infos.
+        VkDescriptorImageInfo albedoInfo{};
+        albedoInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        albedoInfo.imageView = obj.albedoMap->imageView();
+        albedoInfo.sampler = textureSampler;
+
+        VkDescriptorImageInfo metallicInfo{};
+        metallicInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        metallicInfo.imageView = obj.metallicMap->imageView();
+        metallicInfo.sampler = textureSampler;
+
+        VkDescriptorImageInfo roughnessInfo{};
+        roughnessInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        roughnessInfo.imageView = obj.roughnessMap->imageView();
+        roughnessInfo.sampler = textureSampler;
+
+        VkDescriptorImageInfo aoInfo{};
+        aoInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        aoInfo.imageView = obj.aoMap->imageView();
+        aoInfo.sampler = textureSampler;
+
         // Allocate and write descriptor set.
         VeDescriptorWriter(*simpleLayout, *simplePool)
-            .writeImage(0, &imageInfo)
-            .writeBuffer(1, &bufferInfo)
+            .writeImage(0, &albedoInfo)
+            .writeImage(1, &metallicInfo)
+            .writeImage(2, &roughnessInfo)
+            .writeImage(3, &aoInfo)
+            .writeBuffer(4, &bufferInfo)
             .build(descriptorSet);
 
         // Insert into our map.

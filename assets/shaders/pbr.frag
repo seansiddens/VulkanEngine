@@ -17,8 +17,11 @@ layout(set = 0, binding = 0) uniform GlobalUbo{
     vec3 viewPos;
 } ubo;
 
-layout(set = 1, binding = 0) uniform sampler2D texSampler_;
-layout(set = 1, binding = 1) uniform Material {
+layout(set = 1, binding = 0) uniform sampler2D albedoMap;
+layout(set = 1, binding = 1) uniform sampler2D metallicMap;
+layout(set = 1, binding = 2) uniform sampler2D roughnessMap;
+layout(set = 1, binding = 3) uniform sampler2D aoMap;
+layout(set = 1, binding = 4) uniform Material {
     vec3 albedo;
     float metallic;
     float roughness;
@@ -80,7 +83,21 @@ float geometrySmith(vec3 N, vec3 V, vec3 L, float roughness) {
     return ggx1 * ggx2;
 }
 
+vec4 srgb_to_linear(vec4 srgb) {
+    vec3 color_srgb = srgb.rgb;
+    vec3 selector = clamp(ceil(color_srgb - 0.04045), 0.0, 1.0); // 0 if under value, 1 if over
+    vec3 under = color_srgb / 12.92;
+    vec3 over = pow((color_srgb + 0.055) / 1.055, vec3(2.4));
+    vec3 result = mix(under, over, selector);
+    return vec4(result, srgb.a);
+}
+
 void main() {
+    vec3 albedo = texture(albedoMap, fragTexCoord).rgb * mat.albedo;
+    float metallic = srgb_to_linear(texture(metallicMap, fragTexCoord)).r * mat.metallic;
+    float roughness = srgb_to_linear(texture(roughnessMap, fragTexCoord)).r * mat.roughness;
+    float ao = srgb_to_linear(texture(aoMap, fragTexCoord)).r * mat.ao;
+
     vec3 N = normalize(fragNormalWorld); // Surface normal
     vec3 V = normalize(ubo.viewPos - fragPosWorld); // View direction
 
@@ -105,13 +122,13 @@ void main() {
         // Dielectric materials are assumed to have a constant F0 value of 0.04.
         vec3 F0 = vec3(0.04);
         // Metal will tint the base reflectivity by the surface's color.
-        F0 = mix(F0, mat.albedo, mat.metallic);
+        F0 = mix(F0, albedo, metallic);
         vec3 F = fresnelSchlick(max(dot(H, V), 0.0), F0);
 
         // Normal distribution function (D)
-        float NDF = distributionGGX(N, H, mat.roughness);
+        float NDF = distributionGGX(N, H, roughness);
         // Geometry (G)
-        float G = geometrySmith(N, V, L, mat.roughness);
+        float G = geometrySmith(N, V, L, roughness);
 
         // Cook-Torrance BRDF
         vec3 numerator = NDF * G * F;
@@ -122,19 +139,20 @@ void main() {
         vec3 kS = F;
         // Diffuse ratio.
         vec3 kD = vec3(1.0) - kS;
-        kD *= 1.0 - mat.metallic; // Metallic surfaces don't refract light, so we nullify the diffuse term.
+        kD *= 1.0 - metallic; // Metallic surfaces don't refract light, so we nullify the diffuse term.
 
         // Calculate the light's contribution to the reflectance equation.
         float NdotL = max(dot(N, L), 0.0);
-        Lo += (kD * mat.albedo / PI + specular) * radiance * NdotL;
+        Lo += (kD * albedo / PI + specular) * radiance * NdotL;
     }
 
     // Improvised ambient term.
-    vec3 ambient = vec3(0.005) * mat.albedo * mat.ao;
+    vec3 ambient = vec3(0.005) * albedo * ao;
 
     vec3 color = ambient + Lo;
     // Tone mapping and gamma correction.
     color = color / (color + vec3(1.0));
 
+//    outColor = vec4(texture(texSampler_, fragTexCoord).rgb, 1.0);
     outColor = vec4(color, 1.0);
 }

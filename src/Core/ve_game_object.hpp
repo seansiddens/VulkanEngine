@@ -20,10 +20,11 @@ struct TransformComponent {
     [[nodiscard]] glm::mat3 normalMatrix() const;
 };
 
-struct Material {
-    glm::vec3 albedo{0.5f, 0.f, 0.f};
-    float metallic{0.3f};
-    float roughness{0.5f};
+// TODO: Handle normal maps too.
+struct PBRMaterial {
+    glm::vec3 albedo{1.f, 1.f, 1.f};
+    float metallic{1.f};
+    float roughness{1.f};
     float ao{1.f};
 };
 
@@ -48,8 +49,12 @@ class VeGameObject {
     std::shared_ptr<VeModel> model{};
     glm::vec3 color{};
     TransformComponent transform{};
-    std::shared_ptr<VeTexture> texture = nullptr;
-    Material material{};
+    std::shared_ptr<VeTexture> texture{};
+    std::shared_ptr<VeTexture> albedoMap{};
+    std::shared_ptr<VeTexture> metallicMap{};
+    std::shared_ptr<VeTexture> roughnessMap{};
+    std::shared_ptr<VeTexture> aoMap{};
+    PBRMaterial material{};
 
    private:
     explicit VeGameObject(id_t objId) : id{objId} {}

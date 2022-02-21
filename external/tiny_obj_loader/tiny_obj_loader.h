@@ -2346,7 +2346,7 @@ bool MaterialFileReader::operator()(const std::string &matId,
     }
 
     std::stringstream ss;
-    ss << "Material file [ " << matId
+    ss << "PBRMaterial file [ " << matId
        << " ] not found in a path : " << m_mtlBaseDir << "\n";
     if (warn) {
       (*warn) += ss.str();
@@ -2363,7 +2363,7 @@ bool MaterialFileReader::operator()(const std::string &matId,
     }
 
     std::stringstream ss;
-    ss << "Material file [ " << filepath
+    ss << "PBRMaterial file [ " << filepath
        << " ] not found in a path : " << m_mtlBaseDir << "\n";
     if (warn) {
       (*warn) += ss.str();
@@ -2381,7 +2381,7 @@ bool MaterialStreamReader::operator()(const std::string &matId,
   (void)matId;
   if (!m_inStream) {
     std::stringstream ss;
-    ss << "Material stream in error state. \n";
+    ss << "PBRMaterial stream in error state. \n";
     if (warn) {
       (*warn) += ss.str();
     }
