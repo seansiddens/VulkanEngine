@@ -269,7 +269,7 @@ bool VeDevice::checkValidationLayerSupport() {
     return true;
 }
 
-std::vector<const char *> VeDevice::getRequiredExtensions() {
+std::vector<const char *> VeDevice::getRequiredExtensions() const {
     uint32_t glfwExtensionCount = 0;
     const char **glfwExtensions;
     glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
@@ -576,7 +576,7 @@ void VeDevice::transitionImageLayout(VkImage image,
 
         sourceStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
         destinationStage =
-            VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;  // We using resource in the fragment stage.
+            VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;  // We're using resource in the fragment stage.
     } else {
         throw std::invalid_argument("unsupported layout transition");
     }

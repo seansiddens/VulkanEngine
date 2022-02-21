@@ -1,19 +1,20 @@
 #pragma once
 
-// std
-#include <vulkan/vulkan.h>
+#include "Core/ve_camera.hpp"
+#include "Core/ve_frame_info.hpp"
+#include "Core/ve_game_object.hpp"
+#include "Renderer/ve_descriptors.hpp"
+#include "Renderer/ve_device.hpp"
+#include "Renderer/ve_pipeline.hpp"
+#include "Renderer/ve_swap_chain.hpp"
 
+// std
 #include <memory>
 #include <unordered_map>
 #include <vector>
 
-#include "ve_camera.hpp"
-#include "ve_descriptors.hpp"
-#include "ve_device.hpp"
-#include "ve_frame_info.hpp"
-#include "ve_game_object.hpp"
-#include "ve_pipeline.hpp"
-#include "ve_swap_chain.hpp"
+// lib
+#include <vulkan/vulkan.h>
 
 namespace ve {
 

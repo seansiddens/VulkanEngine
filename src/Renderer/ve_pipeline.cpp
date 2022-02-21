@@ -1,6 +1,6 @@
 #include "ve_pipeline.hpp"
 
-#include "ve_model.hpp"
+#include "Core/ve_model.hpp"
 
 // std
 #include <cassert>
@@ -141,7 +141,7 @@ std::vector<char> VePipeline::readFile(const std::string& filepath) {
 
     // Read file into buffer.
     file.seekg(0);
-    file.read(buffer.data(), fileSize);
+    file.read(buffer.data(), static_cast<std::streamsize>(fileSize));
 
     // Close file and return the buffer.
     file.close();

@@ -57,8 +57,8 @@ VeBuffer::~VeBuffer() {
  * @param size (Optional) Size of the memory range to map. Pass VK_WHOLE_SIZE to map the complete
  * buffer range.
  * @param offset (Optional) Byte offset from beginning
- *
  * @return VkResult of the buffer mapping call
+ *
  */
 VkResult VeBuffer::map(VkDeviceSize size, VkDeviceSize offset) {
     assert(buffer && memory && "Called map on buffer before create");

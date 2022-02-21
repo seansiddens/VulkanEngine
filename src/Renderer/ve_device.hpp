@@ -1,9 +1,10 @@
 #pragma once
 
+// std
 #include <string>
 #include <vector>
 
-#include "ve_window.hpp"
+#include "Core/ve_window.hpp"
 
 namespace ve {
 
@@ -14,11 +15,13 @@ struct SwapChainSupportDetails {
 };
 
 struct QueueFamilyIndices {
-    uint32_t graphicsFamily;
-    uint32_t presentFamily;
+    uint32_t graphicsFamily{};
+    uint32_t presentFamily{};
     bool graphicsFamilyHasValue = false;
     bool presentFamilyHasValue = false;
-    bool isComplete() { return graphicsFamilyHasValue && presentFamilyHasValue; }
+    [[nodiscard]] bool isComplete() const {
+        return graphicsFamilyHasValue && presentFamilyHasValue;
+    }
 };
 
 class VeDevice {
@@ -29,7 +32,7 @@ class VeDevice {
     const bool enableValidationLayers = true;
 #endif
 
-    VeDevice(VeWindow &veWindow);
+    explicit VeDevice(VeWindow &veWindow);
     ~VeDevice();
 
     // Not copyable or movable
@@ -74,8 +77,8 @@ class VeDevice {
                                VkFormat format,
                                VkImageLayout oldLayout,
                                VkImageLayout newLayout);
-
-    VkPhysicalDeviceProperties properties;
+   public:
+    VkPhysicalDeviceProperties properties{};
 
    private:
     void createInstance();
@@ -87,24 +90,25 @@ class VeDevice {
 
     // Helper functions.
     bool isDeviceSuitable(VkPhysicalDevice device);
-    std::vector<const char *> getRequiredExtensions();
+    [[nodiscard]] std::vector<const char *> getRequiredExtensions() const;
     bool checkValidationLayerSupport();
     QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
-    void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT &createInfo);
+    static void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT &createInfo);
     void hasGflwRequiredInstanceExtensions();
     bool checkDeviceExtensionSupport(VkPhysicalDevice device);
     SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device);
 
-    VkInstance instance;
-    VkDebugUtilsMessengerEXT debugMessenger;
+   private:
+    VkInstance instance = VK_NULL_HANDLE;
+    VkDebugUtilsMessengerEXT debugMessenger = VK_NULL_HANDLE;
     VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
     VeWindow &veWindow;
-    VkCommandPool commandPool;  // Command buffers are allocated from this memory.
+    VkCommandPool commandPool{};  // Command buffers are allocated from this memory.
 
-    VkDevice device_;
-    VkSurfaceKHR surface_;
-    VkQueue graphicsQueue_;
-    VkQueue presentQueue_;
+    VkDevice device_ = VK_NULL_HANDLE;
+    VkSurfaceKHR surface_ = VK_NULL_HANDLE;
+    VkQueue graphicsQueue_ = VK_NULL_HANDLE;
+    VkQueue presentQueue_ = VK_NULL_HANDLE;
 
     const std::vector<const char *> validationLayers = {"VK_LAYER_KHRONOS_validation"};
     const std::vector<const char *> deviceExtensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};

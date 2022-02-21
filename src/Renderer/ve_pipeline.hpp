@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 
-#include "ve_device.hpp"
+#include "Renderer/ve_device.hpp"
 
 namespace ve {
 
@@ -84,13 +84,14 @@ class VePipeline {
 
     void createShaderModule(const std::vector<char>& code, VkShaderModule* shaderModule);
 
+   private:
     // Potentially memory unsafe if our device is freed before our pipeline.
     // Reference member will implicitly outlive the class since a pipeline MUST have a
     // device to exist (aggregation relationship).
     VeDevice& veDevice;
-    VkPipeline graphicsPipeline;
-    VkShaderModule vertShaderModule;
-    VkShaderModule fragShaderModule;
+    VkPipeline graphicsPipeline = VK_NULL_HANDLE;
+    VkShaderModule vertShaderModule = VK_NULL_HANDLE;
+    VkShaderModule fragShaderModule = VK_NULL_HANDLE;
 };
 
 }  // namespace ve

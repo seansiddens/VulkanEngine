@@ -1,12 +1,14 @@
 #pragma once
 
+
+#include "Core/ve_window.hpp"
+#include "Renderer/ve_device.hpp"
+#include "Renderer/ve_swap_chain.hpp"
+
+// std
 #include <cassert>
 #include <memory>
 #include <vector>
-
-#include "ve_device.hpp"
-#include "ve_swap_chain.hpp"
-#include "ve_window.hpp"
 
 namespace ve {
 
@@ -25,7 +27,9 @@ class VeRenderer {
     void beginSwapChainRenderPass(VkCommandBuffer commandBuffer);
     void endSwapChainRenderPass(VkCommandBuffer commandBuffer) const;
 
-    [[nodiscard]] VkRenderPass getSwapChainRenderPass() const { return veSwapChain->getRenderPass(); }
+    [[nodiscard]] VkRenderPass getSwapChainRenderPass() const {
+        return veSwapChain->getRenderPass();
+    }
     [[nodiscard]] float getAspectRatio() const { return veSwapChain->extentAspectRatio(); }
     [[nodiscard]] bool isFrameInProgress() const { return isFrameStarted; }
     [[nodiscard]] VkCommandBuffer getCurrentCommandBuffer() const {

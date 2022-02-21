@@ -2,8 +2,8 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 
-#include "ve_model.hpp"
-#include "ve_texture.hpp"
+#include "Core/ve_model.hpp"
+#include "Renderer/ve_texture.hpp"
 
 // std
 #include <memory>

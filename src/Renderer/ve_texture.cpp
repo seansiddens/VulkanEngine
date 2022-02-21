@@ -1,10 +1,13 @@
 #include "ve_texture.hpp"
 
-#include <stdexcept>
+#include "Renderer/ve_buffer.hpp"
 
-#include "ve_buffer.hpp"
+// lib
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
+
+// std
+#include <stdexcept>
 
 // Pathing is done from the build directory, so we define a macro to orient us automatically
 // in the project root directory.

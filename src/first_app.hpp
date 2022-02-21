@@ -4,12 +4,12 @@
 #include <memory>
 #include <vector>
 
-#include "ve_descriptors.hpp"
-#include "ve_device.hpp"
-#include "ve_game_object.hpp"
-#include "ve_input.hpp"
-#include "ve_renderer.hpp"
-#include "ve_window.hpp"
+#include "Renderer/ve_descriptors.hpp"
+#include "Renderer/ve_device.hpp"
+#include "Core/ve_game_object.hpp"
+#include "Core/ve_input.hpp"
+#include "Renderer/ve_renderer.hpp"
+#include "Core/ve_window.hpp"
 
 namespace ve {
 

@@ -1,6 +1,6 @@
 #include "simple_render_system.hpp"
 
-// libs
+// lib
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
@@ -127,7 +127,7 @@ void SimpleRenderSystem::createPipeline(VkRenderPass renderPass) {
     pipelineConfig.renderPass = renderPass;
     pipelineConfig.pipelineLayout = pipelineLayout;
     vePipeline = std::make_unique<VePipeline>(
-        veDevice, "shaders/pbr.vert.spv", "shaders/pbr.frag.spv", pipelineConfig);
+        veDevice, "assets/shaders/pbr.vert.spv", "assets/shaders/pbr.frag.spv", pipelineConfig);
 }
 
 void SimpleRenderSystem::renderGameObjects(FrameInfo& frameInfo) {
@@ -175,8 +175,6 @@ void SimpleRenderSystem::renderGameObjects(FrameInfo& frameInfo) {
         obj.model->bind(frameInfo.commandBuffer);
         obj.model->draw(frameInfo.commandBuffer);
     }
-
-    // throw std::runtime_error("Throwing error after rendering every game object!");
 }
 
 }  // namespace ve

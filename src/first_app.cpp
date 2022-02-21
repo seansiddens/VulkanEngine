@@ -1,12 +1,12 @@
 #include "first_app.hpp"
 
-#include "camera_controller.hpp"
-#include "movement_controller.hpp"
-#include "systems/point_light_system.hpp"
-#include "systems/simple_render_system.hpp"
-#include "ve_camera.hpp"
-#include "ve_frame_info.hpp"
-#include "ve_texture.hpp"
+#include "Core/camera_controller.hpp"
+#include "Core/movement_controller.hpp"
+#include "Systems/point_light_system.hpp"
+#include "Systems/simple_render_system.hpp"
+#include "Core/ve_camera.hpp"
+#include "Core/ve_frame_info.hpp"
+#include "Renderer/ve_texture.hpp"
 
 // libs
 #define GLM_FORCE_RADIANS
@@ -191,10 +191,10 @@ void FirstApp::initScene() {
 void FirstApp::loadGameObjects() {
     // Load textures.
     std::shared_ptr<VeTexture> statueTexture =
-        VeTexture::createTextureFromFile(veDevice, "textures/statue.jpg");
+        VeTexture::createTextureFromFile(veDevice, "assets/textures/statue.jpg");
 
     std::shared_ptr<VeTexture> vikingTexture =
-        VeTexture::createTextureFromFile(veDevice, "textures/viking_room.png");
+        VeTexture::createTextureFromFile(veDevice, "assets/textures/viking_room.png");
 
     std::shared_ptr<VeTexture> woodTexture =
         VeTexture::createTextureFromFile(veDevice, "textures/wood.png");
@@ -244,14 +244,14 @@ void FirstApp::loadGameObjects() {
 
 void FirstApp::loadTestScene() {
     std::shared_ptr<VeTexture> woodTexture =
-        VeTexture::createTextureFromFile(veDevice, "textures/wood.png");
+        VeTexture::createTextureFromFile(veDevice, "assets/textures/wood.png");
 
     std::shared_ptr<VeModel> sphereModel =
-        VeModel::createModelFromFile(veDevice, "models/sphere.obj");
-    std::shared_ptr<VeModel> cubeModel = VeModel::createModelFromFile(veDevice, "models/cube/cube.obj");
-    std::shared_ptr<VeModel> monkeyModel = VeModel::createModelFromFile(veDevice, "models/suzanne.obj");
-    std::shared_ptr<VeModel> bunnyModel = VeModel::createModelFromFile(veDevice, "models/bunny.obj");
-    std::shared_ptr<VeModel> minecraft = VeModel::createModelFromFile(veDevice, "models/lost_empire/lost_empire.obj");
+        VeModel::createModelFromFile(veDevice, "assets/models/sphere.obj");
+    std::shared_ptr<VeModel> cubeModel = VeModel::createModelFromFile(veDevice, "assets/models/cube/cube.obj");
+    std::shared_ptr<VeModel> monkeyModel = VeModel::createModelFromFile(veDevice, "assets/models/suzanne.obj");
+    std::shared_ptr<VeModel> bunnyModel = VeModel::createModelFromFile(veDevice, "assets/models/bunny.obj");
+    std::shared_ptr<VeModel> minecraft = VeModel::createModelFromFile(veDevice, "assets/models/lost_empire/lost_empire.obj");
 
     int numSpheres = 4;
 
