@@ -68,7 +68,7 @@ set(IMGUI_SOURCES
         ${IMGUI_PATH}/imgui_widgets.cpp
         ${IMGUI_PATH}/imgui_tables.cpp
         ${IMGUI_PATH}/imgui_impl_glfw.cpp
-        ${IMGUI_PATH}/imgui_impl_vulkan.cpp)
+        ${IMGUI_PATH}/imgui_impl_vulkan.cpp src/ImGui/ve_imgui.cpp src/ImGui/ve_imgui.h)
 #message(${IMGUI_SOURCES})
 #add_library(imgui STATIC ${IMGUI_SOURCES})
 #target_include_directories(imgui PUBLIC ${VULKAN_INCLUDE_DIRS} ${GLFW_INCLUDE_DIRS})

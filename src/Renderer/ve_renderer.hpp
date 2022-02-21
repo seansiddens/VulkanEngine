@@ -41,6 +41,8 @@ class VeRenderer {
         return currentFrameIndex;
     }
     [[nodiscard]] uint32_t getSwapChainImageCount() const { return veSwapChain->imageCount(); }
+    [[nodiscard]] VeWindow& getWindow() const { return veWindow; }
+    [[nodiscard]] VeDevice& getDevice() const { return veDevice; }
 
     void setClearColor(VkClearColorValue _clearColor) { clearColor = _clearColor; }
 
