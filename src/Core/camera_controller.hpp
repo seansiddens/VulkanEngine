@@ -1,5 +1,6 @@
 #pragma once
 
+#include <glm/ext/matrix_transform.hpp>
 
 #include "ve_camera.hpp"
 #include "ve_input.hpp"
@@ -85,7 +86,7 @@ class MouseCameraController : public CameraController {
     const float MAX_MOVE_SPEED = 999999.f;
     // Initialize values to face +Z.
     float m_pitch{0.f};
-    float m_yaw{M_PI / 2.f};
+    float m_yaw = glm::pi<float>() / 2.f;
 
 };
 

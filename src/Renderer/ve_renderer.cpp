@@ -2,6 +2,7 @@
 
 // std
 #include <stdexcept>
+#include <array>
 
 namespace ve {
 

@@ -1,7 +1,6 @@
 #include "camera_controller.hpp"
 
 #include <cmath>
-#include <glm/ext/matrix_transform.hpp>
 #include <iostream>
 
 namespace ve {
@@ -11,9 +10,9 @@ ArcballCam::ArcballCam(VeInput& input, glm::vec3 _target, float _zoomSpeed)
 
 void ArcballCam::update(VeCamera& cam, float deltaTime) {
     // A movement from left to right = 2 * PI = 360 deg
-    auto angleScaleX = static_cast<float>(2.f * M_PI / veInput.getWindow().getExtent().width);
+    auto angleScaleX = static_cast<float>(2.f * glm::pi<float>() / veInput.getWindow().getExtent().width);
     // A movement from top to bottom = PI = 180 deg.
-    auto angleScaleY = static_cast<float>(M_PI / veInput.getWindow().getExtent().height);
+    auto angleScaleY = static_cast<float>(glm::pi<float>() / veInput.getWindow().getExtent().height);
 
     glm::vec3 forwardDir = glm::normalize(target - cam.getPosition());
 

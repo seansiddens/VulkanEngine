@@ -50,8 +50,8 @@ struct PipelineConfigInfo {
     VkPipelineDynamicStateCreateInfo dynamicStateInfo;
 
     // These values are initialized by the application layer.
-    VkPipelineLayout pipelineLayout = nullptr;
-    VkRenderPass renderPass = nullptr;
+    VkPipelineLayout pipelineLayout;
+    VkRenderPass renderPass;
     uint32_t subpass = 0;
 };
 
