@@ -5,3 +5,6 @@ build/
 cmake-build-debug/
 .env.cmake
 .run/
+.vs/
+out/
+CMakeSettings.json
