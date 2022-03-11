@@ -5,8 +5,8 @@
 #include "Core/ve_camera.hpp"
 #include "Core/ve_frame_info.hpp"
 #include "Renderer/ve_texture.hpp"
-#include "Systems/point_light_system.hpp"
-#include "Systems/simple_render_system.hpp"
+#include "systems/point_light_system.hpp"
+#include "systems/simple_render_system.hpp"
 
 // libs
 #define GLM_FORCE_RADIANS

@@ -3,7 +3,7 @@ include(./.env.cmake OPTIONAL RESULT_VARIABLE LOCAL_ENV)
 message(STATUS "Local .env.cmake: ${LOCAL_ENV}")
 
 # C++ and CMake versions.
-cmake_minimum_required(VERSION 3.21)
+cmake_minimum_required(VERSION 3.16.3)
 set(CMAKE_CXX_STANDARD 17)
 
 # Name of our executable and project versioning.
@@ -75,11 +75,31 @@ set(IMGUI_SOURCES
 
 # Find all .cpp and  within the /src directory (including files within nested folders).
 file(GLOB_RECURSE SOURCES ${PROJECT_SOURCE_DIR}/src/ *.cpp)
-message(${SOURCES})
+#message(${SOURCES})
 
 # Add our executable which is built from all of the source files.
 # TODO: Figure out how to add Imgui as a static library.
-add_executable(${PROJECT_NAME} ${SOURCES} ${IMGUI_SOURCES})
+add_executable(${PROJECT_NAME}
+        ${IMGUI_SOURCES}
+        ${PROJECT_SOURCE_DIR}/src/main.cpp
+        ${PROJECT_SOURCE_DIR}/src/first_app.cpp
+        ${PROJECT_SOURCE_DIR}/src/Core/camera_controller.cpp
+        ${PROJECT_SOURCE_DIR}/src/Core/movement_controller.cpp
+        ${PROJECT_SOURCE_DIR}/src/Core/ve_camera.cpp
+        ${PROJECT_SOURCE_DIR}/src/Core/ve_game_object.cpp
+        ${PROJECT_SOURCE_DIR}/src/Core/ve_input.cpp
+        ${PROJECT_SOURCE_DIR}/src/Core/ve_model.cpp
+        ${PROJECT_SOURCE_DIR}/src/Core/ve_window.cpp
+        ${PROJECT_SOURCE_DIR}/src/ImGui/ve_imgui.cpp
+        ${PROJECT_SOURCE_DIR}/src/Renderer/ve_buffer.cpp
+        ${PROJECT_SOURCE_DIR}/src/Renderer/ve_descriptors.cpp
+        ${PROJECT_SOURCE_DIR}/src/Renderer/ve_device.cpp
+        ${PROJECT_SOURCE_DIR}/src/Renderer/ve_pipeline.cpp
+        ${PROJECT_SOURCE_DIR}/src/Renderer/ve_renderer.cpp
+        ${PROJECT_SOURCE_DIR}/src/Renderer/ve_swap_chain.cpp
+        ${PROJECT_SOURCE_DIR}/src/Renderer/ve_texture.cpp
+        ${PROJECT_SOURCE_DIR}/src/systems/point_light_system.cpp
+        ${PROJECT_SOURCE_DIR}/src/systems/simple_render_system.cpp)
 
 # Use C++17 standard.
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
