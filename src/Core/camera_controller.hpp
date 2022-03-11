@@ -52,13 +52,16 @@ class KeyboardCameraController : public CameraController {
         int lookDown = GLFW_KEY_DOWN;
     };
 
-    explicit KeyboardCameraController(VeInput &input, float _moveSpeed = 3.5f, float _lookSpeed = 2.0f);
+    explicit KeyboardCameraController(VeInput &input, float _moveSpeed = 3.5f, float _lookSpeed = 1.0f);
 
     void update(VeCamera &cam, float deltaTime) override;
 
     KeyMappings keys{};
     float moveSpeed;
     float lookSpeed;
+    // Initialize values to face +Z.
+    float m_pitch{0.f};
+    float m_yaw = glm::pi<float>() / 2.f;
 };
 
 class MouseCameraController : public CameraController {
@@ -74,7 +77,7 @@ class MouseCameraController : public CameraController {
         int decreaseMoveSpeed = GLFW_KEY_Q;
     };
 
-    explicit MouseCameraController(VeInput &input, float _moveSpeed = 3.5f, float _lookSpeed = 2.0f);
+    explicit MouseCameraController(VeInput &input, float _moveSpeed = 3.5f, float _lookSpeed = 1.0f);
 
     void update(VeCamera &cam, float deltaTime) override;
 

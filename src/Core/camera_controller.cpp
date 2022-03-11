@@ -57,7 +57,55 @@ KeyboardCameraController::KeyboardCameraController(VeInput& input,
     : CameraController(input), moveSpeed{_moveSpeed}, lookSpeed{_lookSpeed} {}
 
 void KeyboardCameraController::update(VeCamera& cam, float deltaTime) {
-    // TODO: Implement this.
+    // Change pitch and yaw based off of keyboard input.
+    if (veInput.getKey(keys.lookLeft)) {
+        m_yaw += lookSpeed * deltaTime;
+    }
+    if (veInput.getKey(keys.lookRight)) {
+        m_yaw -= lookSpeed * deltaTime;
+    }
+    if (veInput.getKey(keys.lookDown)) {
+        m_pitch += lookSpeed * deltaTime;
+    }
+    if (veInput.getKey(keys.lookUp)) {
+        m_pitch -= lookSpeed * deltaTime;
+    }
+
+    // Clamp pitch between +/- 85 degrees.
+    m_pitch = glm::clamp(m_pitch, -1.5f, 1.5f);
+
+    // Calculate the new direction vector based off of pitch and yaw.
+    glm::vec3 direction{};
+    direction.x = std::cos(m_yaw) * std::cos(m_pitch);
+    direction.y = std::sin(m_pitch);
+    direction.z = std::sin(m_yaw) * std::cos(m_pitch);
+
+    // Update camera w/ new direction.
+    cam.setViewDirection(cam.getPosition(), direction);
+
+    // Move camera.
+    glm::vec3 camPos = cam.getPosition();
+    if (veInput.getKey(keys.moveForward)) {
+        camPos += cam.getViewDir() * moveSpeed * deltaTime;
+    }
+    if (veInput.getKey(keys.moveBackward)) {
+        camPos -= cam.getViewDir() * moveSpeed * deltaTime;
+    }
+    if (veInput.getKey(keys.moveLeft)) {
+        camPos -= cam.getRightDir() * moveSpeed * deltaTime;
+    }
+    if (veInput.getKey(keys.moveRight)) {
+        camPos += cam.getRightDir() * moveSpeed * deltaTime;
+    }
+    if (veInput.getKey(keys.moveUp)) {
+        camPos += cam.getUpDir() * moveSpeed * deltaTime;
+    }
+    if (veInput.getKey(keys.moveDown)) {
+        camPos -= cam.getUpDir() * moveSpeed * deltaTime;
+    }
+
+    // Update cam w/ new position.
+    cam.setViewDirection(camPos, cam.getViewDir());
     //    glm::vec3 rotate{0.f};
     //    if (veInput.getKey(keys.lookRight) == GLFW_PRESS) rotate.y += 1.f;
     //    if (veInput.getKey(keys.lookLeft) == GLFW_PRESS) rotate.y -= 1.f;

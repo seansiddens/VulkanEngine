@@ -85,10 +85,10 @@ void FirstApp::run() {
         veDevice, veRenderer.getSwapChainRenderPass(), globalSetLayout->getDescriptorSetLayout()};
 
     // Initialize the camera and camera controller.
-    VeCamera camera(glm::vec3(4.f, -4.f, 0.f));
+    VeCamera camera(glm::vec3(4.f, -4.f, 0.f), glm::vec3(0.f, 0.f, 15.f));
     ArcballCam arcCam(veInput, glm::vec3(0.f, 0.f, 0.f));
-    MouseCameraController mouseCam(veInput);
-    mouseCam.moveSpeed = 25.f;
+    MouseCameraController mouseCam(veInput, 25.f, 0.5f);
+    KeyboardCameraController keyCam(veInput, 25.f, 2.f);
 
     // Initialize the current time.
     auto currentTime = std::chrono::high_resolution_clock::now();
@@ -115,6 +115,7 @@ void FirstApp::run() {
             mouseCam.update(camera, frameTime);
         } else {
             veInput.setInputMode(GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+            keyCam.update(camera, frameTime);
         }
 
         auto aspect = veRenderer.getAspectRatio();
