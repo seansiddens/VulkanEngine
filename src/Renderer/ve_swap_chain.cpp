@@ -44,10 +44,13 @@ VeSwapChain::~VeSwapChain() {
     }
     swapChainImageViews.clear();
 
-    if (swapChain != nullptr) {
-        vkDestroySwapchainKHR(veDevice.device(), swapChain, nullptr);
-        swapChain = nullptr;
-    }
+    // TODO: Causes error using GCC?? 
+    // if (swapChain != nullptr) {
+    //     vkDestroySwapchainKHR(veDevice.device(), swapChain, nullptr);
+    //     swapChain = nullptr;
+    // }
+    vkDestroySwapchainKHR(veDevice.device(), swapChain, nullptr);
+
 
     for (int i = 0; i < depthImages.size(); i++) {
         vkDestroyImageView(veDevice.device(), depthImageViews[i], nullptr);

@@ -5,8 +5,8 @@
 #include "Core/ve_camera.hpp"
 #include "Core/ve_frame_info.hpp"
 #include "Renderer/ve_texture.hpp"
-#include "systems/point_light_system.hpp"
-#include "systems/simple_render_system.hpp"
+#include "Systems/point_light_system.hpp"
+#include "Systems/simple_render_system.hpp"
 
 // libs
 #define GLM_FORCE_RADIANS
@@ -87,7 +87,7 @@ void FirstApp::run() {
     // Initialize the camera and camera controller.
     VeCamera camera(glm::vec3(4.f, -4.f, 0.f), glm::vec3(0.f, 0.f, 15.f));
     ArcballCam arcCam(veInput, glm::vec3(0.f, 0.f, 0.f));
-    MouseCameraController mouseCam(veInput, 25.f, 0.5f);
+    MouseCameraController mouseCam(veInput, 25.f, 1.0f);
     KeyboardCameraController keyCam(veInput, 25.f, 2.f);
 
     // Initialize the current time.
@@ -115,7 +115,7 @@ void FirstApp::run() {
             mouseCam.update(camera, frameTime);
         } else {
             veInput.setInputMode(GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-            keyCam.update(camera, frameTime);
+//            keyCam.update(camera, frameTime);
         }
 
         auto aspect = veRenderer.getAspectRatio();
@@ -250,6 +250,16 @@ void FirstApp::loadTestScene() {
         VeModel::createModelFromFile(veDevice, "assets/models/bunny.obj");
     std::shared_ptr<VeModel> minecraft =
         VeModel::createModelFromFile(veDevice, "assets/models/lost_empire/lost_empire.obj");
+
+    auto cubeObj = VeGameObject::createGameObject();
+    cubeObj.model = cubeModel;
+    cubeObj.transform.scale *= 5.0f;
+    cubeObj.texture = emptyTexture;
+    cubeObj.albedoMap = emptyTexture;
+    cubeObj.metallicMap = emptyTexture;
+    cubeObj.roughnessMap = emptyTexture;
+    cubeObj.aoMap = emptyTexture;
+    gameObjects.emplace(cubeObj.getId(), std::move(cubeObj));
 
     int numSpheres = 4;
 

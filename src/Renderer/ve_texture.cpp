@@ -39,10 +39,15 @@ VeTexture::~VeTexture() {
     vkFreeMemory(veDevice.device(), textureImageMemory, nullptr);
 }
 
+
 std::unique_ptr<VeTexture> VeTexture::createTextureFromFile(VeDevice& device,
                                                             const std::string& filepath,
                                                             VkFormat format) {
     return std::make_unique<VeTexture>(device, filepath, format);
+}
+
+std::unique_ptr<VeTexture> VeTexture::createCubemapFromFile(VeDevice &) {
+    return std::unique_ptr<VeTexture>();
 }
 
 std::unique_ptr<VeTexture> VeTexture::createEmptyTexture(VeDevice& veDevice) {
@@ -227,5 +232,6 @@ VkSampler VeTexture::createTextureSampler(VeDevice& veDevice) {
 
     return textureSampler;
 }
+
 
 }  // namespace ve
