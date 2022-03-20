@@ -37,6 +37,7 @@ class SkyboxSystem {
 
     std::unique_ptr<VePipeline> vePipeline;
     VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
+
 };
 
 }  // namespace ve

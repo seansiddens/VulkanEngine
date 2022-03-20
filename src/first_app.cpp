@@ -78,7 +78,8 @@ void FirstApp::run() {
     }
 
     // Initialize the render systems.
-    m_cubemap = std::make_shared<VeTexture>(VeTexture::createCubemapFromFile("assets/textures/skybox"));
+    m_cubemap = VeTexture::createCubemapFromFile(veDevice, "assets/textures/skybox");
+    // SkyboxSystem{veDevice, veRenderer.getSwapChainRenderPass(), globalSetLayout->getDescriptorSetLayout(), m_cubemap};
     SimpleRenderSystem simpleRenderSystem{veDevice,
                                           veRenderer.getSwapChainRenderPass(),
                                           globalSetLayout->getDescriptorSetLayout(),
@@ -174,7 +175,6 @@ void FirstApp::run() {
 
 void FirstApp::initScene() {
     loadTestScene();
-    //    initSponzaScene();
 }
 
 void FirstApp::loadGameObjects() {

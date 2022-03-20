@@ -9,7 +9,7 @@ namespace ve {
 
 class VeTexture {
    public:
-    VeTexture(VeDevice& device, const std::string& filepath, VkFormat = VK_FORMAT_R8G8B8A8_SRGB, bool isCubemap = false);
+    VeTexture(VeDevice& device, const std::string& filepath, bool isCubemap, VkFormat = VK_FORMAT_R8G8B8A8_SRGB);
     VeTexture(VeDevice& device,
               const std::vector<unsigned char>& pixels,
               int texWidth,

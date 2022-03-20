@@ -54,10 +54,11 @@ void SkyboxSystem::createPipeline(VkRenderPass renderPass) {
     VePipeline::defaultPipelineConfigInfo(pipelineConfig);
     pipelineConfig.bindingDescriptions.clear();
     pipelineConfig.attributeDescriptions.clear();
+    // TODO: Modify pipelineConfig to have correct binding and attribute descriptions.
     pipelineConfig.renderPass = renderPass;
     pipelineConfig.pipelineLayout = pipelineLayout;
     vePipeline = std::make_unique<VePipeline>(
-        veDevice, "assets/shaders/point_light.vert.spv", "assets/shaders/point_light.frag.spv", pipelineConfig);
+        veDevice, "assets/shaders/skybox.vert.spv", "assets/shaders/skybox.frag.spv", pipelineConfig);
 }
 
 void SkyboxSystem::renderSkybox(FrameInfo& frameInfo) {

@@ -7,24 +7,27 @@
 #include <stb_image.h>
 
 // std
+#include <iostream>
 #include <stdexcept>
 
 // Pathing is done from the build directory, so we define a macro to orient us automatically
 // in the project root directory.
 #ifndef ENGINE_DIR
-#define ENGINE_DIR "../"
+#define ENGINE_DIR ""
 #endif
 
 namespace ve {
 
-VeTexture::VeTexture(VeDevice& device, const std::string& filepath, VkFormat format, bool isCubemap)
+VeTexture::VeTexture(VeDevice& device, const std::string& filepath, bool isCubemap, VkFormat format)
     : veDevice{device}, m_format{format} {
-    if (!isCubemap) {
-        createTextureImageFromFile(filepath);
-        createTextureImageView();
-    } else {
+    if (isCubemap) {
+        std::printf("Creating cubemap!\n");
         createCubemapImageFromFile(filepath);
         createCubemapImageView();
+    } else {
+        std::printf("Creating texture!\n");
+        createTextureImageFromFile(filepath);
+        createTextureImageView();
     }
 }
 
@@ -49,13 +52,14 @@ VeTexture::~VeTexture() {
 std::unique_ptr<VeTexture> VeTexture::createTextureFromFile(VeDevice& device,
                                                             const std::string& filepath,
                                                             VkFormat format) {
-    return std::make_unique<VeTexture>(device, filepath, format, false);
+    return std::make_unique<VeTexture>(device, filepath, false, format);
 }
 
 std::unique_ptr<VeTexture> VeTexture::createCubemapFromFile(VeDevice &device, 
                                                             const std::string& filepath,
                                                             VkFormat format) {
-    return std::make_unique<VeTexture>(device, filepath, format, true);
+    std::printf("Loading cubemap!\n");
+    return std::make_unique<VeTexture>(device, filepath, true, format);
 }
 
 std::unique_ptr<VeTexture> VeTexture::createEmptyTexture(VeDevice& veDevice) {
@@ -70,23 +74,20 @@ std::unique_ptr<VeTexture> VeTexture::createEmptyTexture(VeDevice& veDevice) {
 // https://satellitnorden.wordpress.com/2018/01/23/vulkan-adventures-cube-map-tutorial/
 void VeTexture::createCubemapImageFromFile(const std::string& filepath) {
     // Each texture is loaded separately and stored in an array.
+    std::string faces[] = {"front.jpg", "back.jpg", "top.jpg", "bottom.jpg", "right.jpg", "left.jpg"};
     char *textureData[6];
     int width{0};
     int height{0};
     int numOfChannels{0};
 
     // Load each texture individually.
-    std::string enginePath = ENGINE_DIR + filepath;
-    textureData[0] = (char *)stbi_load((enginePath + "front.jpg").c_str(), &width, &height, &numOfChannels, STBI_rgb_alpha);
-    textureData[1] = (char *)stbi_load((enginePath + "back.jpg").c_str(), &width, &height, &numOfChannels, STBI_rgb_alpha);
-    textureData[2] = (char *)stbi_load((enginePath + "up.jpg").c_str(), &width, &height, &numOfChannels, STBI_rgb_alpha);
-    textureData[3] = (char *)stbi_load((enginePath + "down.jpg").c_str(), &width, &height, &numOfChannels, STBI_rgb_alpha);
-    textureData[4] = (char *)stbi_load((enginePath + "right.jpg").c_str(), &width, &height, &numOfChannels, STBI_rgb_alpha);
-    textureData[5] = (char *)stbi_load((enginePath + "left.jpg").c_str(), &width, &height, &numOfChannels, STBI_rgb_alpha);
-    // Check that everything was successfully loaded.
-    for (auto pixels : textureData) {
-        if (!pixels) {
-            throw std::runtime_error("failed to load cubemap image!");
+    std::string enginePath = filepath + '/';
+    for (int i = 0; i < 6; i++ ){
+        stbi_uc *data = stbi_load((enginePath + faces[i]).c_str(), &width, &height, &numOfChannels, STBI_rgb_alpha);
+        if (data) {
+            textureData[i] = (char *)data;
+        } else {
+            throw std::runtime_error("cubemap tex failed to load at" + (enginePath + faces[i]));
         }
     }
 
@@ -126,9 +127,10 @@ void VeTexture::createCubemapImageFromFile(const std::string& filepath) {
     imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;  // idk what this does.
     // Used for multisampling.
     imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
-    imageInfo.flags = VK_IMAGE_VIEW_TYPE_CUBE; // Cubemap
+    imageInfo.flags = VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
 
     // Initializes the VkImage member.
+    std::printf("Creating VkImage!\n");
     veDevice.createImageWithInfo(
         imageInfo, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, textureImage, textureImageMemory);
 
