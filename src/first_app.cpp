@@ -155,9 +155,9 @@ void FirstApp::run() {
             // Begin render pass.
             veRenderer.beginSwapChainRenderPass(commandBuffer);
 
-            skyboxSystem.renderSkybox(frameInfo);
             simpleRenderSystem.renderGameObjects(frameInfo);
             pointLightSystem.render(frameInfo);
+            skyboxSystem.renderSkybox(frameInfo);
 
             // Render ImGui.
             VeImGui::render(commandBuffer);

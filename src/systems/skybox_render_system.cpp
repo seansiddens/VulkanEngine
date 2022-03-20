@@ -87,9 +87,9 @@ void SkyboxSystem::createPipeline(VkRenderPass renderPass) {
     pipelineConfig.bindingDescriptions.clear();
     pipelineConfig.attributeDescriptions.clear();
     
-    // Always draw behind everything.
-    pipelineConfig.depthStencilInfo.depthTestEnable = VK_FALSE;
-    pipelineConfig.depthStencilInfo.depthWriteEnable = VK_FALSE;
+    // Skybox will always have a depth of 1.0, so if we always draw the skybox last, and 
+    // set the depth test function to pass when values are less or equal to depth buffer's content,
+    // then the skybox will only be drawn when needed.
     pipelineConfig.depthStencilInfo.depthCompareOp = VK_COMPARE_OP_EQUAL;
 
     pipelineConfig.renderPass = renderPass;

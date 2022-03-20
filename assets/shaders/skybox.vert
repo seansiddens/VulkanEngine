@@ -59,9 +59,10 @@ layout(set = 0, binding = 0) uniform GlobalUbo{
 layout (set = 1, binding = 0) uniform samplerCube cubeMapTexture;
 
 void main() {
-  vec3 position = vertices[gl_VertexIndex];
-  TexCoords = position;
+  vec3 vert_position = vertices[gl_VertexIndex];
+  TexCoords = vert_position;
 
   mat4 view_no_translate = mat4(mat3(ubo.view));
-  gl_Position = ubo.projection * view_no_translate * vec4(position, 1.0);
+  vec4 pos = ubo.projection * view_no_translate * vec4(vert_position, 1.0);
+  gl_Position = pos.xyww; // This will cause the depth buffer for the skybox to always be 1.0
 }
