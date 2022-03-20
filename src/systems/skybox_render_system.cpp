@@ -82,22 +82,15 @@ void SkyboxSystem::createPipeline(VkRenderPass renderPass) {
 
     PipelineConfigInfo pipelineConfig{};
     VePipeline::defaultPipelineConfigInfo(pipelineConfig);
+
+    // Cubemap vertices are hard-coded into the shader so we don't need a vertex buffer.
     pipelineConfig.bindingDescriptions.clear();
     pipelineConfig.attributeDescriptions.clear();
-
-    // // Modify the binding and attribute descriptions to match the skybox vertices.
-    // VkVertexInputBindingDescription bindingDescription{};
-    // bindingDescription.binding = 0;
-    // bindingDescription.stride = sizeof(float) * 3;
-    // bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-    // pipelineConfig.bindingDescriptions.push_back(bindingDescription);
-
-    // VkVertexInputAttributeDescription attributeDescription{};
-    // attributeDescription.binding = 0;
-    // attributeDescription.location = 0;
-    // attributeDescription.format = VK_FORMAT_R32G32B32_SFLOAT;
-    // attributeDescription.offset = 0;
-    // pipelineConfig.attributeDescriptions.push_back(attributeDescription);
+    
+    // Always draw behind everything.
+    pipelineConfig.depthStencilInfo.depthTestEnable = VK_FALSE;
+    pipelineConfig.depthStencilInfo.depthWriteEnable = VK_FALSE;
+    pipelineConfig.depthStencilInfo.depthCompareOp = VK_COMPARE_OP_EQUAL;
 
     pipelineConfig.renderPass = renderPass;
     pipelineConfig.pipelineLayout = pipelineLayout;

@@ -73,15 +73,28 @@ std::unique_ptr<VeTexture> VeTexture::createEmptyTexture(VeDevice& veDevice) {
 //      back, bottom, front, left, right, and top
 // https://satellitnorden.wordpress.com/2018/01/23/vulkan-adventures-cube-map-tutorial/
 void VeTexture::createCubemapImageFromFile(const std::string& filepath) {
-    // Each texture is loaded separately and stored in an array.
-    std::string faces[] = {"front.jpg", "back.jpg", "top.jpg", "bottom.jpg", "right.jpg", "left.jpg"};
+    // Each texture is loaded separately and stored in an array
+    //  Layer number  Cubemap face 
+    //        0       Positve X     (right)
+    //        1       Negative X    (left)
+    //        2       Positive Y    (bottom)
+    //        3       Negative Y    (top)
+    //        4       Positive Z    (front)
+    //        5       Negative Z    (back)
+
+    // We load faces in this order according to our coordinate system.
+    std::string faces[] = {"right.jpg", "left.jpg", "bottom.jpg", "top.jpg", "front.jpg", "back.jpg"};
     char *textureData[6];
     int width{0};
     int height{0};
     int numOfChannels{0};
 
     // Load each texture individually.
+    // TODO: All images need an upper-left origin and need to be arranged according to a left-handed 
+    // coordinate system w/ +Y up.
+    // https://www.khronos.org/opengl/wiki/Cubemap_Texture (Vulkan spec is the same)
     std::string enginePath = filepath + '/';
+    stbi_set_flip_vertically_on_load(true);
     for (int i = 0; i < 6; i++ ){
         stbi_uc *data = stbi_load((enginePath + faces[i]).c_str(), &width, &height, &numOfChannels, STBI_rgb_alpha);
         if (data) {
@@ -90,6 +103,7 @@ void VeTexture::createCubemapImageFromFile(const std::string& filepath) {
             throw std::runtime_error("cubemap tex failed to load at" + (enginePath + faces[i]));
         }
     }
+    stbi_set_flip_vertically_on_load(false);
 
     //Calculate the image size and the layer size.
     const VkDeviceSize imageSize = width * height * 4 * 6; 
