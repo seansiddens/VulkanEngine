@@ -79,7 +79,7 @@ void FirstApp::run() {
 
     // Initialize the render systems.
     m_cubemap = VeTexture::createCubemapFromFile(veDevice, "assets/textures/skybox");
-    // SkyboxSystem{veDevice, veRenderer.getSwapChainRenderPass(), globalSetLayout->getDescriptorSetLayout(), m_cubemap};
+    SkyboxSystem skyboxSystem{veDevice, veRenderer.getSwapChainRenderPass(), globalSetLayout->getDescriptorSetLayout(), m_cubemap};
     SimpleRenderSystem simpleRenderSystem{veDevice,
                                           veRenderer.getSwapChainRenderPass(),
                                           globalSetLayout->getDescriptorSetLayout(),
@@ -155,8 +155,9 @@ void FirstApp::run() {
             // Begin render pass.
             veRenderer.beginSwapChainRenderPass(commandBuffer);
 
-            simpleRenderSystem.renderGameObjects(frameInfo);
-            pointLightSystem.render(frameInfo);
+            skyboxSystem.renderSkybox(frameInfo);
+            // simpleRenderSystem.renderGameObjects(frameInfo);
+            // pointLightSystem.render(frameInfo);
 
             // Render ImGui.
             VeImGui::render(commandBuffer);

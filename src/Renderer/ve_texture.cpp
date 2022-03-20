@@ -153,7 +153,8 @@ void VeTexture::createCubemapImageFromFile(const std::string& filepath) {
     veDevice.transitionImageLayout(textureImage,
                                    VK_FORMAT_R8G8B8A8_SRGB,
                                    VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-                                   VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+                                   VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+                                   6); // Need to transition all 6 layers.
 
 
 }

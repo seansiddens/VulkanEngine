@@ -13,7 +13,8 @@ layout(set = 0, binding = 0) uniform GlobalUbo{
     vec3 viewPos;
 } ubo;
 
-//layout (binding = X) uniform samplerCube cubeMapTexture;
+layout (set = 1, binding = 0) uniform samplerCube cubeMapTexture;
 
 void main() {
+    outColor = texture(cubeMapTexture, TexCoords);
 }

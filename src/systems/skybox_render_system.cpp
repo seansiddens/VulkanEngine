@@ -19,11 +19,40 @@ SkyboxSystem::SkyboxSystem(VeDevice& device,
                                    VkDescriptorSetLayout globalSetLayout,
                                    std::shared_ptr<VeTexture> cubemap)
     : veDevice{device}, m_cubemap{cubemap} {
+    
+    // Create sampler for cubemap.
+    m_cubemapSampler = VeTexture::createTextureSampler(veDevice);
+
+    // Create descriptor pool for cubemap.
+    m_cubemapPool = VeDescriptorPool::Builder(veDevice)
+                        .setMaxSets(1)
+                        .addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1)
+                        .build();
+    
+    // Create descriptor set layout for cubemap.
+    m_cubemapLayout = VeDescriptorSetLayout::Builder(veDevice)
+                        .addBinding(0, 
+                                    VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+                                    VK_SHADER_STAGE_FRAGMENT_BIT)
+                        .build();
+    
+    // Cubemap image info.
+    VkDescriptorImageInfo cubemapInfo{};
+    cubemapInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    cubemapInfo.imageView = cubemap->imageView();
+    cubemapInfo.sampler = m_cubemapSampler;
+
+    // Allocate and write descriptor set.
+    VeDescriptorWriter(*m_cubemapLayout, *m_cubemapPool)
+        .writeImage(0, &cubemapInfo)
+        .build(m_cubemapDescriptorSet);
+
     createPipelineLayout(globalSetLayout);
     createPipeline(renderPass);
 }
 
 SkyboxSystem::~SkyboxSystem() {
+    vkDestroySampler(veDevice.device(), m_cubemapSampler, nullptr);
     vkDestroyPipelineLayout(veDevice.device(), pipelineLayout, nullptr);
 }
 
@@ -33,7 +62,8 @@ void SkyboxSystem::createPipelineLayout(VkDescriptorSetLayout globalSetLayout) {
     pushConstantRange.offset = 0;
     // pushConstantRange.size = sizeof(SimplePushConstantData);
 
-    std::vector<VkDescriptorSetLayout> descriptorSetLayouts{globalSetLayout};
+    std::vector<VkDescriptorSetLayout> descriptorSetLayouts{globalSetLayout,
+                                                            m_cubemapLayout->getDescriptorSetLayout()};
 
     VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
     pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -54,7 +84,21 @@ void SkyboxSystem::createPipeline(VkRenderPass renderPass) {
     VePipeline::defaultPipelineConfigInfo(pipelineConfig);
     pipelineConfig.bindingDescriptions.clear();
     pipelineConfig.attributeDescriptions.clear();
-    // TODO: Modify pipelineConfig to have correct binding and attribute descriptions.
+
+    // // Modify the binding and attribute descriptions to match the skybox vertices.
+    // VkVertexInputBindingDescription bindingDescription{};
+    // bindingDescription.binding = 0;
+    // bindingDescription.stride = sizeof(float) * 3;
+    // bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+    // pipelineConfig.bindingDescriptions.push_back(bindingDescription);
+
+    // VkVertexInputAttributeDescription attributeDescription{};
+    // attributeDescription.binding = 0;
+    // attributeDescription.location = 0;
+    // attributeDescription.format = VK_FORMAT_R32G32B32_SFLOAT;
+    // attributeDescription.offset = 0;
+    // pipelineConfig.attributeDescriptions.push_back(attributeDescription);
+
     pipelineConfig.renderPass = renderPass;
     pipelineConfig.pipelineLayout = pipelineLayout;
     vePipeline = std::make_unique<VePipeline>(
@@ -65,7 +109,7 @@ void SkyboxSystem::renderSkybox(FrameInfo& frameInfo) {
     // Bind the pipeline.
     vePipeline->bind(frameInfo.commandBuffer);
 
-    // Only being bound once, not per object
+    // Bind global descriptor set as set 0.
     vkCmdBindDescriptorSets(frameInfo.commandBuffer,
                             VK_PIPELINE_BIND_POINT_GRAPHICS,
                             pipelineLayout,
@@ -75,7 +119,18 @@ void SkyboxSystem::renderSkybox(FrameInfo& frameInfo) {
                             0,
                             nullptr);
 
-    vkCmdDraw(frameInfo.commandBuffer, 6, 1, 0, 0);
+    // Bind cubemap descriptor as set 1.
+    vkCmdBindDescriptorSets(frameInfo.commandBuffer,
+                            VK_PIPELINE_BIND_POINT_GRAPHICS,
+                            pipelineLayout,
+                            1,
+                            1,
+                            &m_cubemapDescriptorSet,
+                            0,
+                            nullptr);
+
+    // Draw.
+    vkCmdDraw(frameInfo.commandBuffer, 36, 1, 0, 0);
 }
 
 }  // namespace ve
