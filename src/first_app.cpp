@@ -5,8 +5,9 @@
 #include "Core/ve_camera.hpp"
 #include "Core/ve_frame_info.hpp"
 #include "Renderer/ve_texture.hpp"
-#include "Systems/point_light_system.hpp"
-#include "Systems/simple_render_system.hpp"
+#include "systems/point_light_system.hpp"
+#include "systems/simple_render_system.hpp"
+#include "systems/skybox_render_system.hpp"
 
 // libs
 #define GLM_FORCE_RADIANS
@@ -77,6 +78,7 @@ void FirstApp::run() {
     }
 
     // Initialize the render systems.
+    m_cubemap = std::make_shared<VeTexture>(VeTexture::createCubemapFromFile("assets/textures/skybox"));
     SimpleRenderSystem simpleRenderSystem{veDevice,
                                           veRenderer.getSwapChainRenderPass(),
                                           globalSetLayout->getDescriptorSetLayout(),
@@ -115,7 +117,7 @@ void FirstApp::run() {
             mouseCam.update(camera, frameTime);
         } else {
             veInput.setInputMode(GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-//            keyCam.update(camera, frameTime);
+            keyCam.update(camera, frameTime);
         }
 
         auto aspect = veRenderer.getAspectRatio();

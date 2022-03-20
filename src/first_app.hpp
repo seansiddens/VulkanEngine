@@ -44,6 +44,7 @@ class FirstApp {
 
     std::unique_ptr<VeDescriptorPool> globalPool{};
     VeGameObject::Map gameObjects;
+    std::shared_ptr<VeTexture> m_cubemap;
 };
 
 }  // namespace ve

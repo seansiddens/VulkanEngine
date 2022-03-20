@@ -17,10 +17,15 @@
 
 namespace ve {
 
-VeTexture::VeTexture(VeDevice& device, const std::string& filepath, VkFormat format)
+VeTexture::VeTexture(VeDevice& device, const std::string& filepath, VkFormat format, bool isCubemap)
     : veDevice{device}, m_format{format} {
-    createTextureImageFromFile(filepath);
-    createTextureImageView();
+    if (!isCubemap) {
+        createTextureImageFromFile(filepath);
+        createTextureImageView();
+    } else {
+        createCubemapImageFromFile(filepath);
+        createCubemapImageView();
+    }
 }
 
 VeTexture::VeTexture(VeDevice& device,
@@ -33,6 +38,7 @@ VeTexture::VeTexture(VeDevice& device,
     createTextureImageView();
 }
 
+
 VeTexture::~VeTexture() {
     vkDestroyImageView(veDevice.device(), textureImageView, nullptr);
     vkDestroyImage(veDevice.device(), textureImage, nullptr);
@@ -43,11 +49,13 @@ VeTexture::~VeTexture() {
 std::unique_ptr<VeTexture> VeTexture::createTextureFromFile(VeDevice& device,
                                                             const std::string& filepath,
                                                             VkFormat format) {
-    return std::make_unique<VeTexture>(device, filepath, format);
+    return std::make_unique<VeTexture>(device, filepath, format, false);
 }
 
-std::unique_ptr<VeTexture> VeTexture::createCubemapFromFile(VeDevice &) {
-    return std::unique_ptr<VeTexture>();
+std::unique_ptr<VeTexture> VeTexture::createCubemapFromFile(VeDevice &device, 
+                                                            const std::string& filepath,
+                                                            VkFormat format) {
+    return std::make_unique<VeTexture>(device, filepath, format, true);
 }
 
 std::unique_ptr<VeTexture> VeTexture::createEmptyTexture(VeDevice& veDevice) {
@@ -56,6 +64,100 @@ std::unique_ptr<VeTexture> VeTexture::createEmptyTexture(VeDevice& veDevice) {
         veDevice, std::vector<unsigned char>(std::begin(pixels), std::end(pixels)), 1, 1, VK_FORMAT_R8G8B8A8_UNORM);
 }
 
+// Creates VkImage and VkDeviceMemory for a cubemap with data loaded from disk.
+// filepath is expected to be a folder holding textures for:
+//      back, bottom, front, left, right, and top
+// https://satellitnorden.wordpress.com/2018/01/23/vulkan-adventures-cube-map-tutorial/
+void VeTexture::createCubemapImageFromFile(const std::string& filepath) {
+    // Each texture is loaded separately and stored in an array.
+    char *textureData[6];
+    int width{0};
+    int height{0};
+    int numOfChannels{0};
+
+    // Load each texture individually.
+    std::string enginePath = ENGINE_DIR + filepath;
+    textureData[0] = (char *)stbi_load((enginePath + "front.jpg").c_str(), &width, &height, &numOfChannels, STBI_rgb_alpha);
+    textureData[1] = (char *)stbi_load((enginePath + "back.jpg").c_str(), &width, &height, &numOfChannels, STBI_rgb_alpha);
+    textureData[2] = (char *)stbi_load((enginePath + "up.jpg").c_str(), &width, &height, &numOfChannels, STBI_rgb_alpha);
+    textureData[3] = (char *)stbi_load((enginePath + "down.jpg").c_str(), &width, &height, &numOfChannels, STBI_rgb_alpha);
+    textureData[4] = (char *)stbi_load((enginePath + "right.jpg").c_str(), &width, &height, &numOfChannels, STBI_rgb_alpha);
+    textureData[5] = (char *)stbi_load((enginePath + "left.jpg").c_str(), &width, &height, &numOfChannels, STBI_rgb_alpha);
+    // Check that everything was successfully loaded.
+    for (auto pixels : textureData) {
+        if (!pixels) {
+            throw std::runtime_error("failed to load cubemap image!");
+        }
+    }
+
+    //Calculate the image size and the layer size.
+    const VkDeviceSize imageSize = width * height * 4 * 6; 
+    const VkDeviceSize layerSize = imageSize / 6; //This is just the size of each layer.
+
+    // Create staging buffer and write pixel data to it.
+    VeBuffer imageStagingBuffer(
+        veDevice,
+        sizeof(textureData[0][0]),
+        imageSize,
+        VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+
+    imageStagingBuffer.map();
+    // Write data to the staging buffer.
+    for (int i = 0; i < 6; i++) {
+        imageStagingBuffer.writeToBuffer(textureData[i], layerSize, layerSize * i);
+        stbi_image_free(textureData[i]); // Free pixel data.
+    }
+    imageStagingBuffer.unmap();
+
+    VkImageCreateInfo imageInfo{};
+    imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+    imageInfo.imageType = VK_IMAGE_TYPE_2D;
+    imageInfo.extent.width = static_cast<uint32_t>(width);
+    imageInfo.extent.height = static_cast<uint32_t>(height);
+    imageInfo.extent.depth = 1;
+    imageInfo.mipLevels = 1;
+    imageInfo.arrayLayers = 6; // Cubemap
+    imageInfo.format = m_format;
+    imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
+    imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    // Going to be used as destination of our staging buffer and will be sampled in our shaders.
+    imageInfo.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+    imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;  // idk what this does.
+    // Used for multisampling.
+    imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+    imageInfo.flags = VK_IMAGE_VIEW_TYPE_CUBE; // Cubemap
+
+    // Initializes the VkImage member.
+    veDevice.createImageWithInfo(
+        imageInfo, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, textureImage, textureImageMemory);
+
+    // The image data is currently stored in the staging buffer, so we must copy it to our image.
+    // Transition the image layout to be optimal for transfering data.
+    veDevice.transitionImageLayout(textureImage,
+                                   VK_FORMAT_R8G8B8A8_SRGB,
+                                   VK_IMAGE_LAYOUT_UNDEFINED,
+                                   VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                                   6); // Need to transition all 6 layers.
+
+    // Copy from staging buffer to the image
+    veDevice.copyBufferToImage(imageStagingBuffer.getBuffer(),
+                               textureImage,
+                               static_cast<uint32_t>(width),
+                               static_cast<uint32_t>(height),
+                               6);
+
+    // Transition the image layout to be optimal for sampling.
+    veDevice.transitionImageLayout(textureImage,
+                                   VK_FORMAT_R8G8B8A8_SRGB,
+                                   VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                                   VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+
+}
+
+// Initializes the VkImage member struct bound with VkDeviceMemory holding the texture data loaded
+// from disk.
 void VeTexture::createTextureImageFromFile(const std::string& filepath) {
     std::string enginePath = ENGINE_DIR + filepath;
     int texWidth, texHeight, texChannels;
@@ -66,6 +168,7 @@ void VeTexture::createTextureImageFromFile(const std::string& filepath) {
         throw std::runtime_error("failed to load texture image!");
     }
 
+    // Create staging buffer and write pixel data to it.
     VeBuffer imageStagingBuffer(
         veDevice,
         sizeof(pixels[0]),
@@ -97,7 +200,7 @@ void VeTexture::createTextureImageFromFile(const std::string& filepath) {
     imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
     imageInfo.flags = 0;
 
-    // Create the image.
+    // Initializes the VkImage member.
     veDevice.createImageWithInfo(
         imageInfo, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, textureImage, textureImageMemory);
 
@@ -201,6 +304,25 @@ void VeTexture::createTextureImageView() {
     }
 }
 
+void VeTexture::createCubemapImageView() {
+    VkImageViewCreateInfo viewInfo{};
+    viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+    viewInfo.image = textureImage;  // Image associated w/ the view.
+    viewInfo.viewType = VK_IMAGE_VIEW_TYPE_CUBE;
+    viewInfo.format = m_format;
+    viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    viewInfo.subresourceRange.baseMipLevel = 0;
+    viewInfo.subresourceRange.levelCount = 1;
+    viewInfo.subresourceRange.baseArrayLayer = 0;
+    viewInfo.subresourceRange.layerCount = 6;
+
+    if (vkCreateImageView(veDevice.device(), &viewInfo, nullptr, &textureImageView) != VK_SUCCESS) {
+        throw std::runtime_error("failed to create texture image view!");
+    }
+
+}
+
+
 VkSampler VeTexture::createTextureSampler(VeDevice& veDevice) {
     VkSamplerCreateInfo samplerInfo{};
 
@@ -233,5 +355,9 @@ VkSampler VeTexture::createTextureSampler(VeDevice& veDevice) {
     return textureSampler;
 }
 
+char *loadTexture(const std::string& filepath, int& width, int& height, int& channels) {
+    char *data = (char *)stbi_load(filepath.c_str(), &width, &height, &channels, STBI_rgb_alpha);
+    return data;
+}
 
 }  // namespace ve

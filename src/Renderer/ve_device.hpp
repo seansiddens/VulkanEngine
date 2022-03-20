@@ -76,7 +76,8 @@ class VeDevice {
     void transitionImageLayout(VkImage image,
                                VkFormat format,
                                VkImageLayout oldLayout,
-                               VkImageLayout newLayout);
+                               VkImageLayout newLayout,
+                               uint32_t layerCount = 1);
    public:
     VkPhysicalDeviceProperties properties{};
 

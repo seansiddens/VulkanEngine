@@ -533,7 +533,8 @@ void VeDevice::createImageWithInfo(const VkImageCreateInfo &imageInfo,
 void VeDevice::transitionImageLayout(VkImage image,
                                      VkFormat format,
                                      VkImageLayout oldLayout,
-                                     VkImageLayout newLayout) {
+                                     VkImageLayout newLayout,
+                                     uint32_t layerCount) {
     VkCommandBuffer commandBuffer = beginSingleTimeCommands();
 
     VkImageMemoryBarrier barrier{};
@@ -548,7 +549,7 @@ void VeDevice::transitionImageLayout(VkImage image,
     barrier.subresourceRange.baseMipLevel = 0;
     barrier.subresourceRange.levelCount = 1;
     barrier.subresourceRange.baseArrayLayer = 0;
-    barrier.subresourceRange.layerCount = 1;
+    barrier.subresourceRange.layerCount = layerCount; // Cubemaps have 6 layers.
 
     // Set transition barrier masks
     VkPipelineStageFlagBits sourceStage;

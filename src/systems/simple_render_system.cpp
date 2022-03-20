@@ -28,10 +28,12 @@ SimpleRenderSystem::SimpleRenderSystem(VeDevice& device,
                                        VkDescriptorSetLayout globalSetLayout,
                                        VeGameObject::Map& gameObjects)
     : veDevice{device} {
+    
+    // Create texture sampler
     textureSampler = VeTexture::createTextureSampler(veDevice);
 
-    numGameObjects = static_cast<int>(gameObjects.size());
 
+    numGameObjects = static_cast<int>(gameObjects.size());
     std::cout << "Number of game objects: " << numGameObjects << "\n";
 
     // Create descriptor pool which allows for a descriptor set for each game object.

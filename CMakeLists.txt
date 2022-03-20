@@ -99,7 +99,8 @@ add_executable(${PROJECT_NAME}
         ${PROJECT_SOURCE_DIR}/src/Renderer/ve_swap_chain.cpp
         ${PROJECT_SOURCE_DIR}/src/Renderer/ve_texture.cpp
         ${PROJECT_SOURCE_DIR}/src/systems/point_light_system.cpp
-        ${PROJECT_SOURCE_DIR}/src/systems/simple_render_system.cpp)
+        ${PROJECT_SOURCE_DIR}/src/systems/simple_render_system.cpp
+        ${PROJECT_SOURCE_DIR}/src/systems/skybox_render_system.cpp)
 
 # Use C++17 standard.
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
