@@ -4,6 +4,7 @@
 #include "Core/movement_controller.hpp"
 #include "Core/ve_camera.hpp"
 #include "Core/ve_frame_info.hpp"
+#include "Core/ve_material.hpp"
 #include "Renderer/ve_texture.hpp"
 #include "systems/point_light_system.hpp"
 #include "systems/simple_render_system.hpp"
@@ -42,6 +43,7 @@ FirstApp::FirstApp() {
 
     //    loadGameObjects();
     //    loadTestScene();
+
     initScene();
 }
 
@@ -79,7 +81,10 @@ void FirstApp::run() {
 
     // Initialize the render systems.
     m_cubemap = VeTexture::createCubemapFromFile(veDevice, "assets/textures/skybox");
-    SkyboxSystem skyboxSystem{veDevice, veRenderer.getSwapChainRenderPass(), globalSetLayout->getDescriptorSetLayout(), m_cubemap};
+    SkyboxSystem skyboxSystem{veDevice,
+                              veRenderer.getSwapChainRenderPass(),
+                              globalSetLayout->getDescriptorSetLayout(),
+                              m_cubemap};
     SimpleRenderSystem simpleRenderSystem{veDevice,
                                           veRenderer.getSwapChainRenderPass(),
                                           globalSetLayout->getDescriptorSetLayout(),
@@ -174,94 +179,52 @@ void FirstApp::run() {
     frame += 1;
 }
 
-void FirstApp::initScene() {
-    loadTestScene();
+void FirstApp::initScene() { 
+    loadAssets();
+    loadTestScene(); 
 }
 
-void FirstApp::loadGameObjects() {
+void FirstApp::loadAssets() {
     // Load textures.
-    std::shared_ptr<VeTexture> statueTexture =
-        VeTexture::createTextureFromFile(veDevice, "assets/textures/statue.jpg");
+    // m_textures["rustedIronAlbedo"] = VeTexture::createTextureFromFile(
+    //     veDevice, "assets/materials/rusted_iron2/rustediron2_albedo.png");
+    // m_textures["rustedIronMetallic"] = VeTexture::createTextureFromFile(
+    //     veDevice, "assets/materials/rusted_iron2/rustediron2_metallic.png");
+    // m_textures["rustedIronRoughness"] = VeTexture::createTextureFromFile(
+    //     veDevice, "assets/materials/rusted_iron2/rustediron2_roughness.png");
+    m_textures["empty"] = VeTexture::createEmptyTexture(veDevice);
 
-    std::shared_ptr<VeTexture> vikingTexture =
-        VeTexture::createTextureFromFile(veDevice, "assets/textures/viking_room.png");
+    // Load models.
+    m_models["cube"] = VeModel::createModelFromFile(veDevice, "assets/models/cube/cube.obj");
+    m_models["sphere"] = VeModel::createModelFromFile(veDevice, "assets/models/sphere.obj");
 
-    std::shared_ptr<VeTexture> woodTexture =
-        VeTexture::createTextureFromFile(veDevice, "textures/wood.png");
-
-    // Load models and attach them to game objects.
-    std::shared_ptr<VeModel> smoothVaseModel =
-        VeModel::createModelFromFile(veDevice, "models/smooth_vase.obj");
-    auto vaseObj = VeGameObject::createGameObject();
-    vaseObj.model = smoothVaseModel;
-    vaseObj.transform.translation = {0.f, -1.0f, 0.f};
-    vaseObj.transform.scale = {2.0f, 2.0f, 2.0f};
-    vaseObj.texture = woodTexture;
-    gameObjects.emplace(vaseObj.getId(), std::move(vaseObj));
-
-    std::shared_ptr<VeModel> cubeModel = VeModel::createModelFromFile(veDevice, "models/cube.obj");
-    auto cubeObj = VeGameObject::createGameObject();
-    cubeObj.model = cubeModel;
-    cubeObj.texture = statueTexture;
-    cubeObj.transform.translation = {0.f, -0.5f, 0.f};
-    cubeObj.transform.scale = {0.5f, 0.5f, 0.5f};
-    gameObjects.emplace(cubeObj.getId(), std::move(cubeObj));
-    //
-    std::shared_ptr<VeModel> quadModel = VeModel::createModelFromFile(veDevice, "models/quad.obj");
-    auto floorObj = VeGameObject::createGameObject();
-    floorObj.model = quadModel;
-    floorObj.transform.translation = {0.f, 0.01f, 0.f};
-    floorObj.transform.scale = {10.f, 1.f, 10.f};
-    floorObj.texture = woodTexture;
-    gameObjects.emplace(floorObj.getId(), std::move(floorObj));
-
-    std::shared_ptr<VeModel> sphereModel =
-        VeModel::createModelFromFile(veDevice, "models/sphere.obj");
-    auto sphereObj = VeGameObject::createGameObject();
-    sphereObj.model = sphereModel;
-    sphereObj.transform.translation = {-1.5f, -1.5f, -1.5f};
-    gameObjects.emplace(sphereObj.getId(), std::move(sphereObj));
-
-    // std::shared_ptr<VeModel> vikingModel =
-    //     VeModel::createModelFromFile(veDevice, "models/viking_room.obj");
-    // auto vikingObj = VeGameObject::createGameObject();
-    // vikingObj.model = vikingModel;
-    // vikingObj.transform.rotation.x = M_PI / 2.f;
-    // vikingObj.transform.translation.y -= 0.5f;
-    // vikingObj.texture = vikingTexture;
-    // gameObjects.emplace(vikingObj.getId(), std::move(vikingObj));
+    // Load materials.
+    m_materials["default"] = Material::createDefaultMaterial(veDevice);
 }
+
 
 void FirstApp::loadTestScene() {
-    std::shared_ptr<VeTexture> woodTexture =
-        VeTexture::createTextureFromFile(veDevice, "assets/textures/wood.png");
-    std::shared_ptr<VeTexture> albedoTexture = VeTexture::createTextureFromFile(
-        veDevice, "assets/materials/rusted_iron2/rustediron2_albedo.png");
-    std::shared_ptr<VeTexture> metallicTexture = VeTexture::createTextureFromFile(
-        veDevice, "assets/materials/rusted_iron2/rustediron2_metallic.png");
-    std::shared_ptr<VeTexture> roughnessTexture = VeTexture::createTextureFromFile(
-        veDevice, "assets/materials/rusted_iron2/rustediron2_roughness.png");
-    std::shared_ptr<VeTexture> emptyTexture = VeTexture::createEmptyTexture(veDevice);
-
-    std::shared_ptr<VeModel> sphereModel =
-        VeModel::createModelFromFile(veDevice, "assets/models/sphere.obj");
-    std::shared_ptr<VeModel> cubeModel =
-        VeModel::createModelFromFile(veDevice, "assets/models/cube/cube.obj");
-    std::shared_ptr<VeModel> monkeyModel =
-        VeModel::createModelFromFile(veDevice, "assets/models/suzanne.obj");
-    std::shared_ptr<VeModel> bunnyModel =
-        VeModel::createModelFromFile(veDevice, "assets/models/bunny.obj");
-    std::shared_ptr<VeModel> minecraft =
-        VeModel::createModelFromFile(veDevice, "assets/models/lost_empire/lost_empire.obj");
+    // std::shared_ptr<VeTexture> woodTexture =
+        // VeTexture::createTextureFromFile(veDevice, "assets/textures/wood.png");
+    // std::shared_ptr<VeModel> sphereModel =
+    //     VeModel::createModelFromFile(veDevice, "assets/models/sphere.obj");
+    // std::shared_ptr<VeModel> cubeModel =
+    //     VeModel::createModelFromFile(veDevice, "assets/models/cube/cube.obj");
+    // std::shared_ptr<VeModel> monkeyModel =
+    //     VeModel::createModelFromFile(veDevice, "assets/models/suzanne.obj");
+    // std::shared_ptr<VeModel> bunnyModel =
+    //     VeModel::createModelFromFile(veDevice, "assets/models/bunny.obj");
+    // std::shared_ptr<VeModel> minecraft =
+    //     VeModel::createModelFromFile(veDevice, "assets/models/lost_empire/lost_empire.obj");
 
     auto cubeObj = VeGameObject::createGameObject();
-    cubeObj.model = cubeModel;
+    cubeObj.model = m_models["cube"];
     cubeObj.transform.scale *= 5.0f;
-    cubeObj.texture = emptyTexture;
-    cubeObj.albedoMap = emptyTexture;
-    cubeObj.metallicMap = emptyTexture;
-    cubeObj.roughnessMap = emptyTexture;
-    cubeObj.aoMap = emptyTexture;
+    cubeObj.material = m_materials["default"];
+    // cubeObj.albedoMap = m_textures["empty"];
+    // cubeObj.metallicMap = m_textures["empty"];
+    // cubeObj.roughnessMap = m_textures["empty"];
+    // cubeObj.aoMap = m_textures["empty"];
     gameObjects.emplace(cubeObj.getId(), std::move(cubeObj));
 
     int numSpheres = 4;
@@ -279,76 +242,70 @@ void FirstApp::loadTestScene() {
             }
 
             auto sphereObj = VeGameObject::createGameObject();
-            sphereObj.model = sphereModel;
-            sphereObj.texture = emptyTexture;
-            sphereObj.albedoMap = albedoTexture;
-//            sphereObj.metallicMap = emptyTexture;
-            sphereObj.metallicMap = metallicTexture;
-            sphereObj.material.metallic = 1.0;
-            sphereObj.roughnessMap = roughnessTexture;
-            sphereObj.aoMap = emptyTexture;
+            sphereObj.model = m_models["sphere"];
             sphereObj.transform.translation = {x * 2.5f, -y * 2.5f, 15.f};
+            sphereObj.material = m_materials["default"];
             gameObjects.emplace(sphereObj.getId(), std::move(sphereObj));
         }
     }
 
-//    auto cubeObj = VeGameObject::createGameObject();
-//    cubeObj.model = cubeModel;
-//    cubeObj.transform.scale *= 20.f;
-//    cubeObj.transform.translation = {0.f, 10.f, 0.f};
-//    cubeObj.texture = woodTexture;
-//    cubeObj.material.roughness = 0.9f;
-//    cubeObj.material.albedo = {0.9f, 0.9f, 0.9f};
-//    cubeObj.material.metallic = 0.0f;
-//    cubeObj.material.ao = 1.f;
-//    gameObjects.emplace(cubeObj.getId(), std::move(cubeObj));
-//
-//    auto monkeyObj = VeGameObject::createGameObject();
-//    monkeyObj.model = monkeyModel;
-//    monkeyObj.texture = woodTexture;
-//    monkeyObj.transform.translation = {-3.f, -3.f, 0.0f};
-//    //    monkeyObj.transform.rotation = {M_PI, M_PI / 2.f, 0.f};
-//    monkeyObj.transform.scale *= 3.0;
-//    monkeyObj.material.roughness = 0.4f;
-//    monkeyObj.material.albedo = {0.4f, 0.6f, 0.9f};
-//    monkeyObj.material.metallic = 0.1f;
-//    monkeyObj.material.ao = 1.f;
-//    gameObjects.emplace(monkeyObj.getId(), std::move(monkeyObj));
-//
-//    auto bunnyObj = VeGameObject::createGameObject();
-//    bunnyObj.model = bunnyModel;
-//    bunnyObj.texture = woodTexture;
-//    bunnyObj.transform.translation = {0.f, 0.f, 4.f};
-//    bunnyObj.transform.rotation = {M_PI, 0.f, 0.f};
-//    bunnyObj.material.roughness = 0.4f;
-//    bunnyObj.material.albedo = {0.0f, 0.6f, 0.0f};
-//    bunnyObj.material.metallic = 0.1f;
-//    bunnyObj.material.ao = 1.f;
-//    gameObjects.emplace(bunnyObj.getId(), std::move(bunnyObj));
-//
-//    auto minecraftObj = VeGameObject::createGameObject();
-//    minecraftObj.model = minecraft;
-//    minecraftObj.transform.rotation.x = M_PI;
-//    minecraftObj.transform.translation.y = 50.f;
-//    minecraftObj.texture = woodTexture;
-//    minecraftObj.material.roughness = 0.9f;
-//    minecraftObj.material.albedo = {0.9f, 0.9f, 0.9f};
-//    minecraftObj.material.metallic = 0.0f;
-//    minecraftObj.material.ao = 1.f;
-//    gameObjects.emplace(minecraftObj.getId(), std::move(minecraftObj));
+    //    auto cubeObj = VeGameObject::createGameObject();
+    //    cubeObj.model = cubeModel;
+    //    cubeObj.transform.scale *= 20.f;
+    //    cubeObj.transform.translation = {0.f, 10.f, 0.f};
+    //    cubeObj.texture = woodTexture;
+    //    cubeObj.material.roughness = 0.9f;
+    //    cubeObj.material.albedo = {0.9f, 0.9f, 0.9f};
+    //    cubeObj.material.metallic = 0.0f;
+    //    cubeObj.material.ao = 1.f;
+    //    gameObjects.emplace(cubeObj.getId(), std::move(cubeObj));
+    //
+    //    auto monkeyObj = VeGameObject::createGameObject();
+    //    monkeyObj.model = monkeyModel;
+    //    monkeyObj.texture = woodTexture;
+    //    monkeyObj.transform.translation = {-3.f, -3.f, 0.0f};
+    //    //    monkeyObj.transform.rotation = {M_PI, M_PI / 2.f, 0.f};
+    //    monkeyObj.transform.scale *= 3.0;
+    //    monkeyObj.material.roughness = 0.4f;
+    //    monkeyObj.material.albedo = {0.4f, 0.6f, 0.9f};
+    //    monkeyObj.material.metallic = 0.1f;
+    //    monkeyObj.material.ao = 1.f;
+    //    gameObjects.emplace(monkeyObj.getId(), std::move(monkeyObj));
+    //
+    //    auto bunnyObj = VeGameObject::createGameObject();
+    //    bunnyObj.model = bunnyModel;
+    //    bunnyObj.texture = woodTexture;
+    //    bunnyObj.transform.translation = {0.f, 0.f, 4.f};
+    //    bunnyObj.transform.rotation = {M_PI, 0.f, 0.f};
+    //    bunnyObj.material.roughness = 0.4f;
+    //    bunnyObj.material.albedo = {0.0f, 0.6f, 0.0f};
+    //    bunnyObj.material.metallic = 0.1f;
+    //    bunnyObj.material.ao = 1.f;
+    //    gameObjects.emplace(bunnyObj.getId(), std::move(bunnyObj));
+    //
+    //    auto minecraftObj = VeGameObject::createGameObject();
+    //    minecraftObj.model = minecraft;
+    //    minecraftObj.transform.rotation.x = M_PI;
+    //    minecraftObj.transform.translation.y = 50.f;
+    //    minecraftObj.texture = woodTexture;
+    //    minecraftObj.material.roughness = 0.9f;
+    //    minecraftObj.material.albedo = {0.9f, 0.9f, 0.9f};
+    //    minecraftObj.material.metallic = 0.0f;
+    //    minecraftObj.material.ao = 1.f;
+    //    gameObjects.emplace(minecraftObj.getId(), std::move(minecraftObj));
 }
 
 // TODO: Sponza model does not work at all lol
-void FirstApp::initSponzaScene() {
-    std::shared_ptr<VeModel> sponzaModel =
-        VeModel::createModelFromFile(veDevice, "models/sponza/sponza.obj");
-    auto sponzaObj = VeGameObject::createGameObject();
-    sponzaObj.model = sponzaModel;
-    sponzaObj.material.roughness = 0.9f;
-    sponzaObj.material.albedo = {0.9f, 0.9f, 0.9f};
-    sponzaObj.material.metallic = 0.0f;
-    sponzaObj.material.ao = 1.f;
-    gameObjects.emplace(sponzaObj.getId(), std::move(sponzaObj));
-}
+// void FirstApp::initSponzaScene() {
+//     std::shared_ptr<VeModel> sponzaModel =
+//         VeModel::createModelFromFile(veDevice, "models/sponza/sponza.obj");
+//     auto sponzaObj = VeGameObject::createGameObject();
+//     sponzaObj.model = sponzaModel;
+//     sponzaObj.material.roughness = 0.9f;
+//     sponzaObj.material.albedo = {0.9f, 0.9f, 0.9f};
+//     sponzaObj.material.metallic = 0.0f;
+//     sponzaObj.material.ao = 1.f;
+//     gameObjects.emplace(sponzaObj.getId(), std::move(sponzaObj));
+// }
 
 }  // namespace ve

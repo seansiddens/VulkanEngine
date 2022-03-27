@@ -30,6 +30,7 @@ class FirstApp {
 
    private:
     void initScene();
+    void loadAssets();
     void loadGameObjects();
     void loadTestScene();
     void initSponzaScene();
@@ -45,6 +46,12 @@ class FirstApp {
     std::unique_ptr<VeDescriptorPool> globalPool{};
     VeGameObject::Map gameObjects;
     std::shared_ptr<VeTexture> m_cubemap;
+    
+    // Assets
+    std::unordered_map<std::string, std::shared_ptr<VeTexture>> m_textures;
+    std::unordered_map<std::string, std::shared_ptr<VeModel>> m_models;
+    std::unordered_map<std::string, std::shared_ptr<Material>> m_materials;
+
 };
 
 }  // namespace ve

@@ -2,6 +2,7 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 
+#include "Core/ve_material.hpp"
 #include "Core/ve_model.hpp"
 #include "Renderer/ve_texture.hpp"
 
@@ -49,12 +50,13 @@ class VeGameObject {
     std::shared_ptr<VeModel> model{};
     glm::vec3 color{};
     TransformComponent transform{};
-    std::shared_ptr<VeTexture> texture{};
-    std::shared_ptr<VeTexture> albedoMap{};
-    std::shared_ptr<VeTexture> metallicMap{};
-    std::shared_ptr<VeTexture> roughnessMap{};
-    std::shared_ptr<VeTexture> aoMap{};
-    PBRMaterial material{};
+    std::shared_ptr<Material> material{};
+
+    // std::shared_ptr<VeTexture> albedoMap{};
+    // std::shared_ptr<VeTexture> metallicMap{};
+    // std::shared_ptr<VeTexture> roughnessMap{};
+    // std::shared_ptr<VeTexture> aoMap{};
+    // PBRMaterial material{};
 
    private:
     explicit VeGameObject(id_t objId) : id{objId} {}

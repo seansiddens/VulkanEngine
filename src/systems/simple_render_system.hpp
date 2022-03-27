@@ -56,6 +56,8 @@ class SimpleRenderSystem {
 
     // UBO's for object materials.
     std::vector<std::unique_ptr<VeBuffer>> materialUBOs;
+
+    // Cubemap.
 };
 
 }  // namespace ve

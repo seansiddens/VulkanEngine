@@ -67,17 +67,17 @@ SimpleRenderSystem::SimpleRenderSystem(VeDevice& device,
         VkDescriptorSet descriptorSet{};
         // Allocate material UBO.
         auto ubo = std::make_unique<VeBuffer>(veDevice,
-                                              sizeof(PBRMaterial),
+                                              sizeof(DeviceMaterial),
                                               1,
                                               VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
                                               VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
         // Write material info to the UBO.
         ubo->map();
-        PBRMaterial mat{};
-        mat.albedo = obj.material.albedo;
-        mat.metallic = obj.material.metallic;
-        mat.roughness = obj.material.roughness;
-        mat.ao = obj.material.ao;
+        DeviceMaterial mat{};
+        mat.albedo = obj.material->m_albedo;
+        mat.metallic = obj.material->m_metallic;
+        mat.roughness = obj.material->m_roughness;
+        mat.ao = obj.material->m_ao;
         ubo->writeToBuffer(&mat);
         ubo->flush();
         auto bufferInfo = ubo->descriptorInfo();
@@ -86,22 +86,22 @@ SimpleRenderSystem::SimpleRenderSystem(VeDevice& device,
         // Write texture infos.
         VkDescriptorImageInfo albedoInfo{};
         albedoInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        albedoInfo.imageView = obj.albedoMap->imageView();
+        albedoInfo.imageView = obj.material->m_albedoMap->imageView();
         albedoInfo.sampler = textureSampler;
 
         VkDescriptorImageInfo metallicInfo{};
         metallicInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        metallicInfo.imageView = obj.metallicMap->imageView();
+        metallicInfo.imageView = obj.material->m_metallicMap->imageView();
         metallicInfo.sampler = textureSampler;
 
         VkDescriptorImageInfo roughnessInfo{};
         roughnessInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        roughnessInfo.imageView = obj.roughnessMap->imageView();
+        roughnessInfo.imageView = obj.material->m_roughnessMap->imageView();
         roughnessInfo.sampler = textureSampler;
 
         VkDescriptorImageInfo aoInfo{};
         aoInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        aoInfo.imageView = obj.aoMap->imageView();
+        aoInfo.imageView = obj.material->m_aoMap->imageView();
         aoInfo.sampler = textureSampler;
 
         // Allocate and write descriptor set.
@@ -157,7 +157,7 @@ void SimpleRenderSystem::createPipeline(VkRenderPass renderPass) {
     pipelineConfig.renderPass = renderPass;
     pipelineConfig.pipelineLayout = pipelineLayout;
     vePipeline = std::make_unique<VePipeline>(
-        veDevice, "assets/shaders/pbr.vert.spv", "assets/shaders/pbr.frag.spv", pipelineConfig);
+        veDevice, "../assets/shaders/pbr.vert.spv", "../assets/shaders/pbr.frag.spv", pipelineConfig);
 }
 
 void SimpleRenderSystem::renderGameObjects(FrameInfo& frameInfo) {

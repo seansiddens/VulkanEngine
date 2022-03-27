@@ -52,11 +52,13 @@ class VeModel {
     void bind(VkCommandBuffer commandBuffer);
     void draw(VkCommandBuffer commandBuffer);
 
+    // TODO: This should not be public, just a temp fix.
+    VeDevice &veDevice;
+
    private:
     void createVertexBuffers(const std::vector<Vertex> &vertices);
     void createIndexBuffers(const std::vector<uint32_t> &indices);
 
-    VeDevice &veDevice;
 
     std::unique_ptr<VeBuffer> vertexBuffer;
     uint32_t vertexCount;

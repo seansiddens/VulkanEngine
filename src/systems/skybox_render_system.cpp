@@ -95,7 +95,7 @@ void SkyboxSystem::createPipeline(VkRenderPass renderPass) {
     pipelineConfig.renderPass = renderPass;
     pipelineConfig.pipelineLayout = pipelineLayout;
     vePipeline = std::make_unique<VePipeline>(
-        veDevice, "assets/shaders/skybox.vert.spv", "assets/shaders/skybox.frag.spv", pipelineConfig);
+        veDevice, "../assets/shaders/skybox.vert.spv", "../assets/shaders/skybox.frag.spv", pipelineConfig);
 }
 
 void SkyboxSystem::renderSkybox(FrameInfo& frameInfo) {

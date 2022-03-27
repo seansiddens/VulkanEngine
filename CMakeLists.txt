@@ -90,6 +90,7 @@ add_executable(${PROJECT_NAME}
         ${PROJECT_SOURCE_DIR}/src/Core/ve_input.cpp
         ${PROJECT_SOURCE_DIR}/src/Core/ve_model.cpp
         ${PROJECT_SOURCE_DIR}/src/Core/ve_window.cpp
+        ${PROJECT_SOURCE_DIR}/src/Core/ve_material.cpp
         ${PROJECT_SOURCE_DIR}/src/ImGui/ve_imgui.cpp
         ${PROJECT_SOURCE_DIR}/src/Renderer/ve_buffer.cpp
         ${PROJECT_SOURCE_DIR}/src/Renderer/ve_descriptors.cpp

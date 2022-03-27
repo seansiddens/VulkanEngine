@@ -17,7 +17,7 @@
 // Pathing is done from the build directory, so we define a macro to orient us automatically
 // in the project root directory.
 #ifndef ENGINE_DIR
-#define ENGINE_DIR ""
+#define ENGINE_DIR "../"
 #endif
 
 namespace std {

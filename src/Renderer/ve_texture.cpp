@@ -13,7 +13,7 @@
 // Pathing is done from the build directory, so we define a macro to orient us automatically
 // in the project root directory.
 #ifndef ENGINE_DIR
-#define ENGINE_DIR ""
+#define ENGINE_DIR "../"
 #endif
 
 namespace ve {
@@ -93,14 +93,14 @@ void VeTexture::createCubemapImageFromFile(const std::string& filepath) {
     // TODO: All images need an upper-left origin and need to be arranged according to a left-handed 
     // coordinate system w/ +Y up.
     // https://www.khronos.org/opengl/wiki/Cubemap_Texture (Vulkan spec is the same)
-    std::string enginePath = filepath + '/';
+    std::string enginePath = ENGINE_DIR + filepath + '/';
     stbi_set_flip_vertically_on_load(true);
     for (int i = 0; i < 6; i++ ){
         stbi_uc *data = stbi_load((enginePath + faces[i]).c_str(), &width, &height, &numOfChannels, STBI_rgb_alpha);
         if (data) {
             textureData[i] = (char *)data;
         } else {
-            throw std::runtime_error("cubemap tex failed to load at" + (enginePath + faces[i]));
+            throw std::runtime_error("cubemap tex failed to load at " + (enginePath + faces[i]));
         }
     }
     stbi_set_flip_vertically_on_load(false);
