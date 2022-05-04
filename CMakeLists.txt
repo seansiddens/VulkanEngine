@@ -147,7 +147,6 @@ elseif (UNIX)
     target_link_libraries(${PROJECT_NAME} glfw ${Vulkan_LIBRARIES})
 endif ()
 ############## Build SHADERS #######################
-
 # Find all vertex and fragment sources within shaders directory
 # taken from VBlancos vulkan tutorial
 # https://github.com/vblanco20-1/vulkan-guide/blob/all-chapters/CMakeLists.txt
