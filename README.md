@@ -2,9 +2,13 @@
 
 A Vulkan rendering engine.
 
-Lots of the code here is from [Brendan Galea's](https://www.youtube.com/channel/UC9pXmjxsQHeFH9vgCeRsHcw) videos on Vulkan.
+### Resources Used
+- https://vulkan-tutorial.com/
+- https://vkguide.dev/
+- https://www.youtube.com/watch?v=Y9U9IE0gVHA&list=PL8327DO66nu9qYVKLDmdLW_84-yE4auCR
+- https://github.com/SaschaWillems/Vulkan
 
-[Project notes on notion](https://glass-derby-42f.notion.site/Vulkan-Engine-5c0290a10ab94294b53f81decae34ffc)
+### [Project notes on notion](https://glass-derby-42f.notion.site/Vulkan-Engine-5c0290a10ab94294b53f81decae34ffc)
 
 
 ## Screenshots
